@@ -1,0 +1,49 @@
+start: model | scenario
+
+model: "model" DOMAIN_MODEL_NAME entity* scenario*
+
+entity: "entity" ENTITY_NAME "{" (actions)?  (states)?  (properties)? "}"
+
+actions: "actions:" _separated{ACTION_NAME, ","}  
+states: "states:"  _separated{STATE_NAME, ","}  
+properties: "properties:"  _separated{PROPERTY_NAME, ","}  
+
+scenario: "Scenario:" SCENARIO_NAME given when then
+
+given: "Given" entity_property ("And" entity_property)*
+
+entity_property: (("the" ENTITY_NAME | "\"" ENTITY_INSTANCE "\"") | ("the" PROPERTY_NAME | "\"" PROPERTY_INSTANCE "\"")) (("of"|"from"|"in"|"on"|"at") "the" (ENTITY_NAME  |"\"" ENTITY_INSTANCE "\""))? STATE_GUARD "in"?  (STATE_NAME | GUARD PROPERTY_VALUE )
+
+STATE_GUARD: "is" | "is not" | "are" | "are not"
+GUARD: "equal to" | "greater than" | "less than"
+
+when: "When" action (within_time)?
+
+action: ACTION_MODE ACTION_NAME (ACTION_VALUE)?
+ACTION_MODE: "I do" | "I do not" | "I"
+
+within_time: "within" TIME_VARIABLE_VALUE TIME_VARIABLE
+
+then: "Then" entity_property ("And" entity_property)*
+
+_separated{x, sep}: x (sep x)*
+
+TIME_VARIABLE_VALUE: NUMBER
+TIME_VARIABLE: "seconds" | "minutes" | "hours" | "days" | "weeks" | "months" | "years"
+
+SENTANCE: /[\w\s]+/
+DOMAIN_MODEL_NAME: SENTANCE /\n/
+ENTITY_NAME: SENTANCE
+ACTION_NAME: WORD
+STATE_NAME: WORD
+PROPERTY_NAME: WORD
+PROPERTY_INSTANCE: SENTANCE
+SCENARIO_NAME: /.+/
+ACTION_VALUE: /.+/
+ENTITY_INSTANCE: SENTANCE
+PROPERTY_VALUE: /.+/
+
+%import common.NUMBER -> NUMBER
+%import common.WS
+%import common.WORD -> WORD
+%ignore WS
