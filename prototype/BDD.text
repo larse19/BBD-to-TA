@@ -1,20 +1,26 @@
-model vending system
+model vending_system
 
-entity vendingMachine {
+entity vending_machine {
   actions: insert, select, pick, cancel
-  states: idle, dispensingMode, selectionMode, extraDispensingMode
-  properties: option, insertedAmount, product
+  states: idle, dispensing_mode, selection_mode, extra_dispensing_mode
+  properties: option, inserted_amount, product
 }
 
 entity product {
   states: returned
 }
 
-entity inserted amount {
+entity inserted_amount {
   states: returned
 }
 
 Scenario: Waiting_for_drink_selection
-Given the vendingMachine is idle
-When I insert $2
-Then the vendingMachine is in selectionMode
+Given the vending_machine is idle
+When I insert 2
+Then the vending_machine is in selection_mode
+
+Scenario: Successful_dispensing_with_no_extras
+Given the vending_machine is idle
+When I insert 2
+And I select the product "Coke" within 5 seconds
+Then the vending_machine is in dispensing_mode
