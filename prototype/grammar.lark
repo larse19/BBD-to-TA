@@ -12,15 +12,13 @@ entity: "entity" ENTITY_NAME "{" (actions)?  (states)?  (properties)? "}"
 
 entity_property: (("the" ENTITY_NAME ("\"" ENTITY_INSTANCE "\"")?) | ("the" PROPERTY_NAME ("\"" PROPERTY_INSTANCE "\"")?) ("of"|"from"|"in"|"on"|"at") "the" ENTITY_NAME ("\"" ENTITY_INSTANCE "\"")?)?
 
-
-
 given: "Given" entity_property STATE_GUARD ( ("in"? STATE_NAME) | (GUARD PROPERTY_VALUE) ) ("And" entity_property STATE_GUARD   ( ("in"? STATE_NAME) | (GUARD PROPERTY_VALUE) ))*
 
 when: "When" action  ("And" action )* 
 
 ?concurrent: "And" concurrent_action ("And" concurrent_action)*
 
-then: "Then" entity_property STATE_GUARD (("in"? STATE_NAME) | (GUARD PROPERTY_VALUE)) ("And" entity_property)*
+then: "Then" entity_property STATE_GUARD (("in"? STATE_NAME) | (GUARD PROPERTY_VALUE)) ("And"  entity_property STATE_GUARD (("in"? STATE_NAME) | (GUARD PROPERTY_VALUE)))*
 
 
 STATE_GUARD: "is" | "is not" | "are" | "are not"
@@ -49,7 +47,7 @@ PROPERTY_INSTANCE: NAME
 SCENARIO_NAME: NAME
 ACTION_VALUE: NAME | NUMBER
 ENTITY_INSTANCE: NAME
-PROPERTY_VALUE: NAME
+PROPERTY_VALUE: NAME | NUMBER
 
 %import common.NUMBER -> NUMBER
 %import common.WS
