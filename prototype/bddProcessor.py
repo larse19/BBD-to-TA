@@ -13,7 +13,7 @@ def parse (text):
 
 # ast = dsl_parser.parse(text)
 if __name__ == "__main__":
-    text = open(os.path.join(dirname, "BDD.text"), "r")
+    text = open(os.path.join(dirname, "BDD.txt"), "r")
     ast = parse(text.read())
     print(ast.pretty())
     print("\n")

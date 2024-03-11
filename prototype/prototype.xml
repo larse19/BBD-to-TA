@@ -2,24 +2,31 @@
 <!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
 <nta>
 <declaration>
+clock x;
+chan insert, select, pick, cancel;
+string option;
+string inserted_amount;
+string product;
 </declaration>
 <template>
 	<name>vending_machine</name>
-	<location id="id0" x="0" y="0"> 
-        <name x="0" y="20">idle</name>
-    </location>
-	<location id="id1" x="50" y="0"> 
-        <name x="50" y="20">selection_mode</name>
-    </location>
-	<location id="id2" x="100" y="0"> 
-        <name x="100" y="20">dispensing_mode</name>
-    </location>
-	<location id="id3" x="150" y="0"> 
-        <name x="150" y="20">extra_dispensing_mode</name>
-    </location>
-	<location id="id4" x="200" y="0"> 
-        <name x="200" y="20">returned</name>
-    </location>
+	<location id="<built-in function id>" x="0" y="0"> 
+            <name x="0" y="20">idle</name>
+        </location>
+	<location id="<built-in function id>" x="50" y="0"> 
+            <name x="50" y="20">selection_mode</name>
+        </location>
+	<transition id="id0"><source ref="id0"/><target ref="id1"/><label kind="synchronisation" x="0" y="0">insert?</label></transition>
 	<init ref="id0"/>
-</template><system>vending_machine</system>
+</template><template>
+	<name>user</name>
+	<location id="id0" x="0" y="0"> 
+            <name x="0" y="20">idle</name>
+        </location>
+	<location id="id0" x="50" y="0"> 
+            <name x="50" y="20">selection_mode</name>
+        </location>
+	<transition id="id0"><source ref="id0"/><target ref="id1"/><label kind="synchronisation" x="0" y="0">insert?</label></transition>
+	<init ref="id0"/>
+</template><system>vending_machine, user</system>
 </nta>
