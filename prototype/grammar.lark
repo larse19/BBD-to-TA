@@ -8,7 +8,7 @@ entity: "entity" ENTITY_NAME "{" (actions)?  (states)?  (properties)? "}"
 ?states: "states:"  _separated{STATE_NAME, ","}  
 ?properties: "properties:"  _separated{PROPERTY_NAME, ","}  
 
-?scenario: "Scenario:" SCENARIO_NAME given when then
+?scenario: "Scenario:" SCENARIO_NAME given when concurrent? then
 
 entity_property: (("the" ENTITY_NAME ("\"" ENTITY_INSTANCE "\"")?) | ("the" PROPERTY_NAME ("\"" PROPERTY_INSTANCE "\"")?) ("of"|"from"|"in"|"on"|"at") "the" ENTITY_NAME ("\"" ENTITY_INSTANCE "\"")?)?
 
@@ -25,7 +25,7 @@ STATE_GUARD: "is" | "is not" | "are" | "are not"
 GUARD: "equal to" | "greater than" | "less than"
 
 
-concurrent_action: ACTION_MODE "concurrently" ACTION_NAME (ACTION_VALUE)? entity_property (within_time)?
+!concurrent_action: ACTION_MODE "concurrently" ACTION_NAME (ACTION_VALUE)? entity_property (within_time)?
 action: ACTION_MODE ACTION_NAME (ACTION_VALUE)? entity_property (within_time)?
 ACTION_MODE: "I do" | "I do not" | "I"
 

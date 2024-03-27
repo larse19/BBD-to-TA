@@ -3,30 +3,52 @@
 <nta>
 <declaration>
 clock x;
-chan insert, select, pick, cancel;
-string option;
-string inserted_amount;
-string product;
+chan insert_2;
+chan insert_2;
+chan select_Coke;
+chan select_Coke;
+chan select_ice;
+chan insert_2;
+chan cancel;
+chan insert_2;
+chan no_select;
+chan pick_Coke;
+chan no_pick_Coke;
+chan no_select;
 </declaration>
 <template>
 	<name>vending_machine</name>
-	<location id="<built-in function id>" x="0" y="0"> 
-            <name x="0" y="20">idle</name>
-        </location>
-	<location id="<built-in function id>" x="50" y="0"> 
-            <name x="50" y="20">selection_mode</name>
-        </location>
-	<transition id="id0"><source ref="id0"/><target ref="id1"/><label kind="synchronisation" x="0" y="0">insert?</label></transition>
-	<init ref="id0"/>
-</template><template>
-	<name>user</name>
 	<location id="id0" x="0" y="0"> 
-            <name x="0" y="20">idle</name>
-        </location>
-	<location id="id0" x="50" y="0"> 
-            <name x="50" y="20">selection_mode</name>
-        </location>
-	<transition id="id0"><source ref="id0"/><target ref="id1"/><label kind="synchronisation" x="0" y="0">insert?</label></transition>
+        <name x="0" y="20">idle</name>
+        
+    </location>
+	<location id="id3" x="0" y="0"> 
+        <name x="0" y="20">selection_mode</name>
+        
+    </location>
+	<location id="id2" x="0" y="0"> 
+        <name x="0" y="20">dispensing_mode</name>
+        <committed/>
+    </location>
+	<location id="id4" x="0" y="0"> 
+        <name x="0" y="20">extra_dispensing_mode</name>
+        
+    </location>
+	<location id="id5" x="0" y="0"> 
+        <name x="0" y="20">returned</name>
+        
+    </location>
+	<transition><source ref="id2"/><target ref="id4"/><label kind="synchronisation" x="0" y="0">select_ice?</label></transition>
+	<transition><source ref="id2"/><target ref="id0"/><label kind="synchronisation" x="0" y="0">pick_Coke?</label></transition>
+	<transition><source ref="id2"/><target ref="id5"/><label kind="synchronisation" x="0" y="0">no_pick_Coke?</label></transition>
+	<transition><source ref="id3"/><target ref="id2"/><label kind="synchronisation" x="0" y="0">select_Coke?</label></transition>
+	<transition><source ref="id3"/><target ref="id5"/><label kind="synchronisation" x="0" y="0">cancel?</label></transition>
+	<transition><source ref="id3"/><target ref="id5"/><label kind="synchronisation" x="0" y="0">no_select?</label></transition>
+	<transition><source ref="id0"/><target ref="id3"/><label kind="synchronisation" x="0" y="0">insert_2?</label></transition>
+	<transition><source ref="id0"/><target ref="id5"/><label kind="synchronisation" x="0" y="0">no_select?</label></transition>
 	<init ref="id0"/>
-</template><system>vending_machine, user</system>
+</template>
+<system>
+system vending_machine, user;
+</system>
 </nta>
