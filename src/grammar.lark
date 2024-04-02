@@ -1,0 +1,55 @@
+start: model | scenario
+
+model: "model" DOMAIN_MODEL_NAME entity* scenario*
+
+entity: "entity" ENTITY_NAME "{" (actions)?  (states)?  (properties)? "}"
+
+?actions: "actions:" _separated{ACTION_NAME, ","}  
+?states: "states:"  _separated{STATE_NAME, ","}  
+?properties: "properties:"  _separated{PROPERTY_NAME, ","}  
+
+?scenario: "Scenario:" SCENARIO_NAME given when concurrent? then
+
+entity_property:  (("the" ENTITY_NAME ("\"" ENTITY_INSTANCE "\"")?) | (("the" PROPERTY_NAME ("\"" PROPERTY_INSTANCE "\"")?) ("of"|"from"|"in"|"on"|"at") "the" ENTITY_NAME ("\"" ENTITY_INSTANCE "\"")?)?)
+
+given: "Given" entity_property STATE_GUARD ( ("in"? STATE_NAME) | (GUARD PROPERTY_VALUE) ) ("And" entity_property STATE_GUARD   ( ("in"? STATE_NAME) | (GUARD PROPERTY_VALUE) ))*
+
+when: "When" action  ("And" action )* 
+
+?concurrent: "And" concurrent_action ("And" concurrent_action)*
+
+then: "Then" entity_property STATE_GUARD (("in"? STATE_NAME) | (GUARD PROPERTY_VALUE)) ("And"  entity_property STATE_GUARD (("in"? STATE_NAME) | (GUARD PROPERTY_VALUE)))*
+
+
+STATE_GUARD: "is" | "is not" | "are" | "are not"
+GUARD: "equal to" | "greater than" | "less than"
+
+
+!concurrent_action: ACTION_MODE "concurrently" ACTION_NAME (ACTION_VALUE)? entity_property (within_time)?
+action: ACTION_MODE ACTION_NAME (ACTION_VALUE)? entity_property (within_time)?
+ACTION_MODE: "I do" | "I do not" | "I"
+
+?within_time: "within" TIME_VARIABLE_VALUE TIME_VARIABLE
+
+
+_separated{x, sep}: x (sep x)*
+
+TIME_VARIABLE_VALUE: NUMBER
+TIME_VARIABLE: "seconds" | "minutes" | "hours" | "days" | "weeks" | "months" | "years"
+
+
+DOMAIN_MODEL_NAME: NAME /\n/
+ENTITY_NAME: NAME
+ACTION_NAME: NAME
+STATE_NAME: NAME
+PROPERTY_NAME: NAME
+PROPERTY_INSTANCE: NAME
+SCENARIO_NAME: NAME
+ACTION_VALUE: NAME | NUMBER
+ENTITY_INSTANCE: NAME
+PROPERTY_VALUE: NAME | NUMBER
+
+%import common.NUMBER -> NUMBER
+%import common.WS
+%import common.CNAME -> NAME
+%ignore WS

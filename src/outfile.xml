@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+    <!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+    <nta>
+<declaration>
+clock x;
+struct {
+	bool returned;
+} product;
+struct {
+	bool returned;
+	int value;
+} inserted_amount;
+chan insert_2;
+chan select_Coke;
+chan select_ice;
+chan cancel;
+chan no_select;
+chan pick_Coke;
+chan no_pick_Coke;
+</declaration>
+<template>
+	<name>vending_machine</name>
+	<location id="id1" x="0" y="0"> 
+            <name x="20" y="0">idle</name>
+            
+        </location>
+	<location id="id2" x="-200" y="0"> 
+            <name x="-180" y="0">selection_mode</name>
+            
+        </location>
+	<location id="id3" x="-200" y="0"> 
+            <name x="-180" y="0">dispensing_mode</name>
+            <committed/>
+        </location>
+	<location id="id4" x="-200" y="0"> 
+            <name x="-180" y="0">extra_dispensing_mode</name>
+            
+        </location>
+	<init ref="id1"/>
+	<transition><source ref="id3"/><target ref="id4"/>
+	<label kind="synchronisation" x="-200" y="-70">select_ice?</label>
+	<nail x="-190" y="-50"/>
+	<nail x="-210" y="-50"/>
+</transition>
+	<transition><source ref="id3"/><target ref="id1"/>
+	<label kind="synchronisation" x="-100" y="-120">pick_Coke?</label>
+	<nail x="-190" y="-100"/>
+	<nail x="-10" y="-100"/>
+</transition>
+	<transition><source ref="id3"/><target ref="id1"/>
+	<label kind="assignment" x="-100" y="-170">product.returned := true</label>
+	<label kind="synchronisation" x="-100" y="-185">no_pick_Coke?</label>
+	<nail x="-190" y="-150"/>
+	<nail x="-10" y="-150"/>
+</transition>
+	<transition><source ref="id2"/><target ref="id3"/>
+	<label kind="synchronisation" x="-200" y="-220">select_Coke?</label>
+	<nail x="-190" y="-200"/>
+	<nail x="-210" y="-200"/>
+</transition>
+	<transition><source ref="id2"/><target ref="id1"/>
+	<label kind="assignment" x="-100" y="-270">inserted_amount.returned := true</label>
+	<label kind="synchronisation" x="-100" y="-285">cancel?</label>
+	<nail x="-190" y="-250"/>
+	<nail x="-10" y="-250"/>
+</transition>
+	<transition><source ref="id2"/><target ref="id1"/>
+	<label kind="assignment" x="-100" y="-320">inserted_amount.returned := true</label>
+	<label kind="synchronisation" x="-100" y="-335">no_select?</label>
+	<nail x="-190" y="-300"/>
+	<nail x="-10" y="-300"/>
+</transition>
+	<transition><source ref="id1"/><target ref="id2"/>
+	<label kind="assignment" x="-100" y="50">inserted_amount.value := 2</label>
+	<label kind="synchronisation" x="-100" y="65">insert_2?</label>
+	<nail x="-10" y="50"/>
+	<nail x="-190" y="50"/>
+</transition>
+	<transition><source ref="id1"/><target ref="id1"/>
+	<label kind="guard" x="0" y="-70">inserted_amount.value &lt; 2</label>
+	<label kind="assignment" x="0" y="-85">inserted_amount.returned := true</label>
+	<label kind="synchronisation" x="0" y="-100">no_select?</label>
+	<nail x="10" y="-50"/>
+	<nail x="-10" y="-50"/>
+</transition>
+</template>
+<system>
+system vending_machine, user;
+</system>
+</nta>
