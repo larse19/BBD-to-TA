@@ -3,6 +3,13 @@
 <nta>
 <declaration>
 clock x;
+struct {
+	bool returned;
+} product;
+struct {
+	bool returned;
+	int value;
+} inserted_amount;
 chan insert_2;
 chan insert_2;
 chan select_Coke;
@@ -19,34 +26,68 @@ chan no_select;
 <template>
 	<name>vending_machine</name>
 	<location id="id0" x="0" y="0"> 
-        <name x="0" y="20">idle</name>
+        <name x="20" y="0">idle</name>
         
     </location>
-	<location id="id3" x="0" y="0"> 
-        <name x="0" y="20">selection_mode</name>
+	<location id="id2" x="200" y="0"> 
+        <name x="220" y="0">selection_mode</name>
         
     </location>
-	<location id="id2" x="0" y="0"> 
-        <name x="0" y="20">dispensing_mode</name>
+	<location id="id3" x="400" y="0"> 
+        <name x="420" y="0">dispensing_mode</name>
         <committed/>
     </location>
-	<location id="id4" x="0" y="0"> 
-        <name x="0" y="20">extra_dispensing_mode</name>
+	<location id="id4" x="600" y="0"> 
+        <name x="620" y="0">extra_dispensing_mode</name>
         
     </location>
-	<location id="id5" x="0" y="0"> 
-        <name x="0" y="20">returned</name>
-        
-    </location>
-	<transition><source ref="id2"/><target ref="id4"/><label kind="synchronisation" x="0" y="0">select_ice?</label></transition>
-	<transition><source ref="id2"/><target ref="id0"/><label kind="synchronisation" x="0" y="0">pick_Coke?</label></transition>
-	<transition><source ref="id2"/><target ref="id5"/><label kind="synchronisation" x="0" y="0">no_pick_Coke?</label></transition>
-	<transition><source ref="id3"/><target ref="id2"/><label kind="synchronisation" x="0" y="0">select_Coke?</label></transition>
-	<transition><source ref="id3"/><target ref="id5"/><label kind="synchronisation" x="0" y="0">cancel?</label></transition>
-	<transition><source ref="id3"/><target ref="id5"/><label kind="synchronisation" x="0" y="0">no_select?</label></transition>
-	<transition><source ref="id0"/><target ref="id3"/><label kind="synchronisation" x="0" y="0">insert_2?</label></transition>
-	<transition><source ref="id0"/><target ref="id5"/><label kind="synchronisation" x="0" y="0">no_select?</label></transition>
 	<init ref="id0"/>
+	<transition><source ref="id3"/><target ref="id4"/>
+	<label kind="synchronisation" x="500" y="-70">select_ice?</label>
+	<nail x="410" y="-50"/>
+	<nail x="590" y="-50"/>
+</transition>
+	<transition><source ref="id3"/><target ref="id0"/>
+	<label kind="synchronisation" x="200" y="50">pick_Coke?</label>
+	<nail x="390" y="50"/>
+	<nail x="10" y="50"/>
+</transition>
+	<transition><source ref="id3"/><target ref="id0"/>
+	<label kind="assignment" x="200" y="100">product.returned := true</label>
+	<label kind="synchronisation" x="200" y="115">no_pick_Coke?</label>
+	<nail x="390" y="100"/>
+	<nail x="10" y="100"/>
+</transition>
+	<transition><source ref="id2"/><target ref="id3"/>
+	<label kind="synchronisation" x="300" y="-70">select_Coke?</label>
+	<nail x="210" y="-50"/>
+	<nail x="390" y="-50"/>
+</transition>
+	<transition><source ref="id2"/><target ref="id0"/>
+	<label kind="assignment" x="100" y="150">inserted_amount.returned := true</label>
+	<label kind="synchronisation" x="100" y="165">cancel?</label>
+	<nail x="190" y="150"/>
+	<nail x="10" y="150"/>
+</transition>
+	<transition><source ref="id2"/><target ref="id0"/>
+	<label kind="assignment" x="100" y="200">inserted_amount.returned := true</label>
+	<label kind="synchronisation" x="100" y="215">no_select?</label>
+	<nail x="190" y="200"/>
+	<nail x="10" y="200"/>
+</transition>
+	<transition><source ref="id0"/><target ref="id2"/>
+	<label kind="assignment" x="100" y="-70">inserted_amount.value := 2</label>
+	<label kind="synchronisation" x="100" y="-85">insert_2?</label>
+	<nail x="10" y="-50"/>
+	<nail x="190" y="-50"/>
+</transition>
+	<transition><source ref="id0"/><target ref="id0"/>
+	<label kind="guard" x="0" y="-120">inserted_amount.value &lt; 2</label>
+	<label kind="assignment" x="0" y="-135">inserted_amount.returned := true</label>
+	<label kind="synchronisation" x="0" y="-150">no_select?</label>
+	<nail x="10" y="-100"/>
+	<nail x="-10" y="-100"/>
+</transition>
 </template>
 <system>
 system vending_machine, user;

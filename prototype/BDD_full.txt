@@ -2,7 +2,7 @@ model vending_system
 
 entity vending_machine {
   actions: insert, select, pick, cancel
-  states: idle, dispensing_mode, selection_mode, extra_dispensing_mode
+  states: idle, selection_mode, dispensing_mode, extra_dispensing_mode
   properties: option, inserted_amount, product
 }
 
@@ -12,12 +12,14 @@ entity product {
 
 entity inserted_amount {
   states: returned
+  properties: value
 }
 
 Scenario: Waiting_for_drink_selection
 Given the vending_machine is idle
 When I insert 2
-Then the vending_machine is in selection_mode
+Then the value of the inserted_amount is equal to 2 
+And the vending_machine is in selection_mode
 
 Scenario: Successful_dispensing_with_no_extras
 Given the vending_machine is idle
@@ -58,7 +60,7 @@ And the vending_machine is idle
 
 Scenario: Not_enough_money
 Given the vending_machine is idle
-And the inserted_amount is less than 2
+And the value of the inserted_amount is less than 2
 When I do not select within 5 seconds
 Then the inserted_amount is returned
 And the vending_machine is idle

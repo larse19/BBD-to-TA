@@ -10,7 +10,7 @@ entity: "entity" ENTITY_NAME "{" (actions)?  (states)?  (properties)? "}"
 
 ?scenario: "Scenario:" SCENARIO_NAME given when concurrent? then
 
-entity_property: (("the" ENTITY_NAME ("\"" ENTITY_INSTANCE "\"")?) | ("the" PROPERTY_NAME ("\"" PROPERTY_INSTANCE "\"")?) ("of"|"from"|"in"|"on"|"at") "the" ENTITY_NAME ("\"" ENTITY_INSTANCE "\"")?)?
+entity_property:  (("the" ENTITY_NAME ("\"" ENTITY_INSTANCE "\"")?) | (("the" PROPERTY_NAME ("\"" PROPERTY_INSTANCE "\"")?) ("of"|"from"|"in"|"on"|"at") "the" ENTITY_NAME ("\"" ENTITY_INSTANCE "\"")?)?)
 
 given: "Given" entity_property STATE_GUARD ( ("in"? STATE_NAME) | (GUARD PROPERTY_VALUE) ) ("And" entity_property STATE_GUARD   ( ("in"? STATE_NAME) | (GUARD PROPERTY_VALUE) ))*
 

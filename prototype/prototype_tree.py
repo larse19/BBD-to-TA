@@ -24,11 +24,45 @@ text = open(os.path.join(dirname, "BDD_full.txt"), "r")
 ast = parse(text.read())
 text.close
 
-location_x_offset = 100
+location_x_offset = 200
+positive_transition_index = 1
+negative_transition_index = 1
 
 variable_names = []
 channels = []
+label_positions = []
+nail_positions = []
 
+class Position:
+
+    def __init__(self, x: int, y: int):
+        self.x = x
+        self.y = y
+
+    def __str__(self):
+        return f"({self.x}, {self.y})"
+
+    def __repr__(self):
+        return f"({self.x}, {self.y})"
+
+    def __eq__(self, __value: object) -> bool:
+        return self.x == __value.x and self.y == __value.y
+
+
+class Nails:
+    def __init__(self, nail1: Position, nail2: Position):
+        self.nail1 = nail1
+        self.nail2 = nail2
+    
+    def __str__(self):
+        return f"{self.nail1}, {self.nail2}"
+    
+    def __repr__(self):
+        return f"{self.nail1}, {self.nail2}"
+    
+    # Note: only one of the nails needs to overlap in order to be considered equal
+    def __eq__(self, __value: object) -> bool:
+        return self.nail1 == __value.nail1 or self.nail2 == __value.nail2
 
 class Entity:
     def __init__(self, name, states, actions, properties):
@@ -42,22 +76,40 @@ class Entity:
 
 
 class Transition:
-    def __init__(self, source: "Location", target: "Location", action: str, label: str, kind: str):
+    def __init__(self, source: "Location", target: "Location", action: str, labels: list["Label"]):
         self.source = source
         self.target = target
         self.action = action
-        self.label = label
-        self.kind = kind
+        self.labels = labels
+
+    def add_label(self, label: "Label"):
+        if(label in self.labels):
+            return
+        self.labels.append(label)
 
     def __str__(self):
-        return f"Source: {self.source}\nTarget: {self.target}\nLabel: {self.label}"
+        return f"\nSource: {self.source}\nTarget: {self.target}\nAction: {self.action}\nLabels: {self.labels}\n"
     
     def __repr__(self):
-        return f"({self.source.name} -> {self.target.name} : {self.label})"
+        return f"({self.source.name} -> {self.target.name} : {self.action})"
     
     def __eq__(self, __value: object) -> bool:
-        return self.source == __value.source and self.target == __value.target and self.action == __value.action and self.label == __value.label and self.kind == __value.kind
+        return self.source == __value.source and self.target == __value.target and self.action == __value.action
 
+class Label:
+    def __init__(self, kind: str, text: str):
+        self.kind = kind
+        self.text = text
+        self.position = Position(0, 0)
+
+    def __str__(self):
+        return f"Kind: {self.kind}\nText: {self.text}"
+
+    def __repr__(self):
+        return f"{self.text}"
+
+    def __eq__(self, __value: object) -> bool:
+        return self.text == __value.text and self.kind == __value.kind
 
 class Location:
 
@@ -65,8 +117,7 @@ class Location:
         self.name = name
         self.id = id
         self.init = init
-        self.pos_x = pos_x
-        self.pos_y = pos_y
+        self.position = Position(pos_x, pos_y)
         self.transitions = transitions
         self.committed = False
 
@@ -90,11 +141,18 @@ def find_child(tree: Tree, type: str):
             return child
     return None
 
+def find_first_data(tree: Tree, data: str):
+    for child in tree.children:
+        if isinstance(child, Tree) and child.data == data:
+            return child
+    return None
+
 entities = []
 main_entity = None
 entity_names = []
 synchronizations = []
 location_index = -1
+invariant_index = -1
 all_locations = []
 
 
@@ -117,8 +175,8 @@ for entity in ast.find_data("entity"):
     if(single_state and single_state not in states):
         states.append(single_state.value)
 
-    for action in entity.find_data("actions"):
-        actions = list(map(lambda a: a.value, action.children ))
+    for action_name in entity.find_data("actions"):
+        actions = list(map(lambda a: a.value, action_name.children ))
     single_action = find_child(entity, "ACTION_NAME")
     if(single_action and single_action not in actions):
         actions.append(single_action.value)
@@ -132,6 +190,7 @@ for entity in ast.find_data("entity"):
     entities.append(Entity(entity_name, states, actions, properties))
 
 main_entity = entities[0]
+
 # go through ast. if any tokens of type "ENTITY_NAME" has a value that is not in entity_names, then change the type to "PROPERTY_NAME"
 for tree in ast.iter_subtrees():
     for token in tree.children:
@@ -148,23 +207,32 @@ model_name = next(ast.find_data("model")).children[0].lstrip(" ").rstrip("\n")
 ta_name = next(ast.find_data("entity")).children[0].lstrip(" ").rstrip("\n")
 
 
-
 scenarios = ast.find_data("scenario")
 first_scenario = next(ast.find_data("scenario"))
 
-# new Rule 3: The first <state name> in the list of states, of the first entity, is mapped to the initial location of the TA
+# returns a tuple (action mode, time variable, value)
+def get_action_constraint(action: Tree):
+    action_mode = find_child(action, "ACTION_MODE")
+    constraint = find_first_data(action, "within_time")
+    if(constraint):
+        value = find_child(constraint, "TIME_VARIABLE_VALUE")
+        time_variable = find_child(constraint, "TIME_VARIABLE")
+        return (action_mode.value, time_variable.value if time_variable else "", value.value if value else "")
+    return None
+
+def constraint_to_string(constraint: tuple):
+    return f'x  &lt;= {constraint[2] * ( 60 if constraint[1] == "minutes" else 3600 if constraint[1] == "hours" else 1)}'
 
 
-
-
-def create_channel_name(action):
+def create_channel_name(action: Tree):
     channel_name = ""
     name = filter(lambda c: c.type == "ACTION_NAME", action.children)
     action_mode = filter(lambda c: c.type == "ACTION_MODE", action.children)
-    try:
-        channel_name += "no_"  if next(action_mode).value == "I do not" else ""
-    except StopIteration:
-        pass
+    if(get_action_constraint(action)):
+        try:
+            channel_name += "no_"  if next(action_mode).value == "I do not" else ""
+        except StopIteration:
+            pass
     try:
         channel_name += next(name).value
     except StopIteration:
@@ -202,15 +270,24 @@ def commit_action(current: Location, action: Tree):
     return None
 
 
-def create_transition(source: Location, target: Location, action: str, label: str, kind: str):
-    transition = Transition(source, target, action, label, kind)
-    if(transition in source.transitions):
-        return
+
+    
+
+def create_transition(source: Location, target: Location, action: str, label: Label):
+    transition = Transition(source, target, action, [])
+
+    # Check if transition already exists, add label if it does
+    for t in source.transitions:
+        if t == transition:
+            t.add_label(label)
+            return t
+
+    transition.add_label(label)
     source.transitions.append(transition)
     return transition
 
-def create_location(name: str, id: str, init: bool, pos_x: int, pos_y: int):
-    location = Location(name, id, [], init, pos_x, pos_y)
+def create_location(name: str, init: bool, pos_x: int, pos_y: int):
+    location = Location(name, generateId(), [], init, pos_x, pos_y)
     if(location in all_locations):
         return
     all_locations.append(location)
@@ -222,35 +299,108 @@ def get_location(name: str):
             return location
     return None
 
-initial_location = create_location(main_entity.states[0], generateId(), True, 0 * location_x_offset, 0)
-
-for entity in entities:
-    # print(entity)
+def create_entity_type(entity: Entity):
+    global globalDeclarations
+    variable_string = 'struct {\n'
     for state in entity.states:
-        create_location(state, generateId(), False, 0, 0)
+        variable_string += f'\t{"bool"} {state};\n'
+    for property in entity.properties:
+        variable_string += f'\t{"int"} {property};\n'
+    variable_string += f'{"}"} {entity.name};\n'
+    globalDeclarations += variable_string
 
+def get_state_guard_boolean(token: Token):
+    if(token.type == "STATE_GUARD"):
+        return "true" if token.value == "is" else "true" if token.value == "are" else "false"
+    return None
+
+# new Rule 3: The first <state name> in the list of states, of the first entity, is mapped to the initial location of the TA
+initial_location = create_location(main_entity.states[0],  True, 0 * location_x_offset, 0)
+
+# Create locations for all states in the main entity
+for state in entities[0].states:
+    create_location(state,  False, location_index * location_x_offset, 0)
+
+# Create all other entities as structs
+for i in range(1, len(entities)):
+    create_entity_type(entities[i])
+
+
+def guard_to_operator(guard: str):
+    return "==" if guard == "equal to" else "&gt;" if guard == "greater than" else "&lt;"
 
 for scenario in scenarios:
     current_location = None
+    labels = []
     for given in scenario.find_data("given"):
+        print(given)
+        given_entity = ""
+        property_name = ""
+        guard = ""
+        for child in given.children:
+            if(isinstance(child, Token)):
+                if(child.type == "GUARD"):
+                    guard = guard_to_operator(child.value)
+            if(isinstance(child, Tree)):
+                entity_name = find_child(child, "ENTITY_NAME")
+                if(entity_name):
+                    given_entity = entity_name.value
+                _property_name = find_child(child, "PROPERTY_NAME")
+                if(_property_name):
+                    property_name = _property_name.value
+            elif(given_entity):
+                if(child.type == "PROPERTY_VALUE"):
+                    labels.append(Label("guard", f'{(given_entity + ".") if given_entity != main_entity.name else ""}{property_name} {guard} {child.value}'))
+
         entity = given.children[0]
         source = find_child(given, "STATE_NAME")
         if(not source):
             continue
         current_location = get_location(source.value)
     if(current_location):
-        for _action in chain(scenario.find_data("action"), scenario.find_data("concurrent_action")):
-            action = create_channel_name(_action)
-            next_location = commit_action(current_location, _action)
+        for action in chain(scenario.find_data("action"), scenario.find_data("concurrent_action")):
+            action_name = create_channel_name(action)
+            next_location = commit_action(current_location, action)
+
+
             if(not next_location):
-                target = None
+                target = next_location
+                # labels = [] 
+                # constraint = get_action_constraint(action)
+                # if(constraint):
+                #     labels.append(Label("guard", constraint_to_string(constraint)))
                 for then_clause in scenario.find_data("then"):
-                    target_name = find_child(then_clause, "STATE_NAME")
-                    if(target_name):
-                        target = get_location(target_name.value)
-                        if(not target):
-                            print("!!!",target_name.value)
-                create_transition(current_location, target, action, action + "?", "synchronisation")
+                    then_entity = ""
+                    then_property = ""
+                    last_guard = "true"
+                    for child in then_clause.children:
+                        if(isinstance(child, Tree)):
+                            entity_name = find_child(child, "ENTITY_NAME")
+                            if(entity_name):
+                                then_entity = entity_name.value
+                            property_name = find_child(child, "PROPERTY_NAME")
+                            if(property_name):
+                                then_property = property_name.value
+                        else:
+                            if(then_entity == main_entity.name):
+                                if(child.type == "STATE_NAME"):
+                                    target = get_location(child.value)
+                                    # TODO: add ! sync to user template
+                                    labels.append(Label("synchronisation", action_name + "?"))
+                                    if(not target):
+                                        print("!!!",child.value)
+                            else:
+                                if(child.type == "STATE_GUARD"):
+                                    last_guard = get_state_guard_boolean(child)
+                                print(child.type, child.value)
+                                # TODO: update entity struct
+                                if(child.type == "STATE_NAME"):
+                                    labels.append(Label("assignment", f'{then_entity}.{child.value} := {last_guard}'))
+                                elif(child.type == "PROPERTY_VALUE"):
+                                    labels.append(Label("assignment", f'{then_entity}.{then_property} := {child.value}'))
+                    
+                for label in labels:
+                    create_transition(current_location, target, action_name, label)
                 current_location = target
             else:
                 current_location = next_location
@@ -268,24 +418,86 @@ explored_locations = []
 
 template_text = "<template>\n"
 template_text += "\t<name>" + ta_name + "</name>\n"
+locations_text = ""
+transitions_text = ""
 init_text = ""
 
 
+def target_is_left_of_source(source: Location, target: Location):
+    return target.position.x < source.position.x
+
+
+def get_transition_nails(transition: Transition):
+    global nail_positions
+
+    if(target_is_left_of_source(transition.source, transition.target)):
+        position = Nails(
+            Position(transition.source.position.x - 10,  50),
+            Position(transition.target.position.x + 10,  50)
+        )
+        while (position in nail_positions):
+            position.nail1.y += 50
+            position.nail2.y += 50
+        nail_positions.append(position)
+        return position
+    
+
+    position = Nails(
+        Position(transition.source.position.x + 10, -  50),
+        Position(transition.target.position.x - 10, -  50)
+    )
+    while (position in nail_positions):
+        position.nail1.y -= 50
+        position.nail2.y -= 50
+    nail_positions.append(position)
+    return position
+    
+def calculate_label_position(transition: Transition, nails: Nails):
+    global positive_transition_index, label_positions
+    increment =  15 if target_is_left_of_source(transition.source, transition.target) else - 15
+    base = 0 if target_is_left_of_source(transition.source, transition.target) else 20
+
+    source_x = nails.nail1.x
+    target_x = nails.nail2.x
+    source_y = nails.nail1.y
+    base_x = source_x + ((target_x-source_x) / 2)
+    base_y = source_y - base
+    position = Position(int(base_x), int(base_y))
+    while position in label_positions:
+        print(position.y, increment, position.y + increment)
+        position.y += increment
+    label_positions.append(position)
+    return position
+
 def print_transitions_to_file(transition: Transition):
-    global template_text
-    template_text += f'\t<transition><source ref="{transition.source.id}"/><target ref="{transition.target.id}"/><label kind="{transition.kind}" x="0" y="0">{transition.label}</label></transition>\n'
+    global transitions_text, positive_transition_index
+    transitions_text += f'\t<transition><source ref="{transition.source.id}"/><target ref="{transition.target.id}"/>\n'
+    nails = get_transition_nails(transition)
+
+    for label in transition.labels:
+        position = calculate_label_position(transition, nails)
+        transitions_text += f'\t<label kind="{label.kind}" x="{position.x}" y="{position.y}">{label.text}</label>\n'
+
+    transitions_text += f'\t<nail x="{nails.nail1.x}" y="{nails.nail1.y}"/>\n'
+    transitions_text += f'\t<nail x="{nails.nail2.x}" y="{nails.nail2.y}"/>\n'
+
+    # if(positive_transition_index > 0):
+    #     transitions_text += f'\t<nail x="{(transition.source.position.x- 10 if target_is_left_of_source(transition.source, transition.target) else transition.source.position.x+ 10)}" y="{-(positive_transition_index * 50)}"/>\n'
+    #     transitions_text += f'\t<nail x="{(transition.target.position.x+ 10 if target_is_left_of_source(transition.source, transition.target) else transition.target.position.x- 10)}" y="{-(positive_transition_index * 50)}"/>\n'
+    transitions_text += "</transition>\n"
+ 
 
 
 def print_location_to_file(location: Location):
-    global init_text, template_text
+    global init_text, locations_text
     if(location in explored_locations):
         return
     explored_locations.append(location)
-    location_text = f'''\t<location id="{location.id}" x="{location.pos_x}" y="{location.pos_y}"> 
-        <name x="{location.pos_x}" y="{location.pos_y + 20}">{location.name}</name>
+    location_text = f'''\t<location id="{location.id}" x="{location.position.x}" y="{location.position.y}"> 
+        <name x="{location.position.x + 20}" y="{location.position.y }">{location.name}</name>
         {f'<committed/>' if location.committed else ''}
     </location>\n'''
-    template_text += location_text
+    locations_text += location_text
     if(location.init):
         init_text = f'\t<init ref="{location.id}"/>\n'
     
@@ -295,7 +507,11 @@ def print_location_to_file(location: Location):
 
 print_location_to_file(all_locations[0])
 
+template_text += locations_text
+
 template_text += init_text
+
+template_text += transitions_text
 
 template_text += "</template>\n" 
 full_text_file += template_text   
