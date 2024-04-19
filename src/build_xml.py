@@ -1,42 +1,27 @@
 from classes import Location, Nails, Position, Transition
 
 
-def build(name: str, init_location: Location, channels: list[str], declarations: str):
-    startString = '''<?xml version="1.0" encoding="utf-8"?>
-    <!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
-    <nta>\n'''
-    declarationStart = '<declaration>\n'
-    declarationEnd = '</declaration>\n'
-
-    full_text_file = startString
-    for channel in channels:
-            declarations += f"chan {channel};\n"
-
-    globalDeclarationFinal = declarationStart + declarations + declarationEnd
-    full_text_file += globalDeclarationFinal
-
-    explored_locations = []
-    nail_positions = []
-    label_positions = []
-
-
+def build_ta(name: str, init_location: Location):
     template_text = "<template>\n"
     template_text += "\t<name>" + name + "</name>\n"
     locations_text = ""
     transitions_text = ""
     init_text = ""
+    explored_locations = []
+    nail_positions = []
+    label_positions = []
 
 
     def target_is_left_of_source(source: Location, target: Location):
         return target.position.x < source.position.x
 
 
-    def get_transition_nails(transition: Transition):
+    def get_transition_nails(source: Location, target: Location):
         nonlocal nail_positions
-        if(target_is_left_of_source(transition.source, transition.target)):
+        if(target_is_left_of_source(source, target)):
             position = Nails(
-                Position(transition.source.position.x - 10,  50),
-                Position(transition.target.position.x + 10,  50)
+                Position(source.position.x - 10,  50),
+                Position(target.position.x + 10,  50)
             )
             while (position in nail_positions):
                 position.nail1.y += 50
@@ -46,8 +31,8 @@ def build(name: str, init_location: Location, channels: list[str], declarations:
         
 
         position = Nails(
-            Position(transition.source.position.x + 10, -  50),
-            Position(transition.target.position.x - 10, -  50)
+            Position(source.position.x + 10, -  50),
+            Position(target.position.x - 10, -  50)
         )
         while (position in nail_positions):
             position.nail1.y -= 50
@@ -67,15 +52,23 @@ def build(name: str, init_location: Location, channels: list[str], declarations:
         base_y = source_y - base
         position = Position(int(base_x), int(base_y))
         while position in label_positions:
-            print(position.y, increment, position.y + increment)
             position.y += increment
         label_positions.append(position)
         return position
 
-    def print_transitions_to_file(transition: Transition):
+    def print_transition_to_file(transition: Transition):
         nonlocal transitions_text
-        transitions_text += f'\t<transition><source ref="{transition.source.id}"/><target ref="{transition.target.id}"/>\n'
-        nails = get_transition_nails(transition)
+        if(transition.source == transition.target):
+            return
+        source = transition.source
+        # if(transition.invariant_location):
+        #     print_location_to_file(transition.invariant_location)
+        #     print_transition_to_file(Transition(source, transition.invariant_location, "", []))
+        #     # transitions_text += f'\t<transition><source ref="{source.id}"/><target ref="{transition.invariant_location.id}"/></transition>\n'
+        #     source = transition.invariant_location
+
+        transitions_text += f'\t<transition><source ref="{source.id}"/><target ref="{transition.target.id}"/>\n'
+        nails = get_transition_nails(source, transition.target)
 
         for label in transition.labels:
             position = calculate_label_position(transition, nails)
@@ -90,17 +83,26 @@ def build(name: str, init_location: Location, channels: list[str], declarations:
         if(location in explored_locations):
             return
         explored_locations.append(location)
+
         location_text = f'''\t<location id="{location.id}" x="{location.position.x}" y="{location.position.y}"> 
-            <name x="{location.position.x + 20}" y="{location.position.y }">{location.name}</name>
-            {f'<committed/>' if location.committed else ''}
-        </location>\n'''
-        locations_text += location_text
+        <name x="{location.position.x + 20}" y="{location.position.y }">{location.name}</name>\n'''
+        
+        if(location.invariant):
+            location_text += f'\t\t<label kind="invariant" x="{location.position.x + 20}" y="{location.position.y +20}">{location.invariant}</label>\n'
+        
+        if(location.committed):
+            location_text += "\t\t<committed/>\n" 
+        
         if(location.init):
             init_text = f'\t<init ref="{location.id}"/>\n'
-        
+
+        location_text += "\t</location>\n"
+        locations_text += location_text
+
         for transition in location.transitions:
+
             print_location_to_file(transition.target)
-            print_transitions_to_file(transition)
+            print_transition_to_file(transition)
 
     print_location_to_file(init_location)
 
@@ -111,9 +113,51 @@ def build(name: str, init_location: Location, channels: list[str], declarations:
     template_text += transitions_text
 
     template_text += "</template>\n" 
+
+    return template_text
+
+
+def build_ctl(formulas: list[(str, str)]):
+
+    text = '''
+    <queries>
+    '''
+    for formula in formulas:
+         text += f'''
+        <query>
+            <formula>{formula[0]}</formula>
+			<comment>{formula[1]}</comment>
+        </query>
+        '''
+    
+    text += '''
+    </queries>
+    '''
+
+    return text
+			
+		
+
+def build(names: list[str], template_text: str, query_text: str, channels: list[str], declarations: list[str]):
+    startString = '''<?xml version="1.0" encoding="utf-8"?>
+    <!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+    <nta>\n'''
+    declarationStart = '<declaration>\n'
+    declarationEnd = '</declaration>\n'
+
+    full_text_file = startString
+    for channel in channels:
+            declarations.append(f"chan {channel};")
+
+    globalDeclarationFinal = declarationStart + "\n".join(declarations) + declarationEnd
+    full_text_file += globalDeclarationFinal
+
+
     full_text_file += template_text   
 
-    full_text_file += f"<system>\nsystem {name}, user;\n</system>\n"
+    full_text_file += f"<system>\nsystem {','.join(names)};\n</system>\n"
+
+    full_text_file += query_text
 
     full_text_file += "</nta>"
 

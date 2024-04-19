@@ -1,3 +1,5 @@
+import json
+
 from lark import Token, Tree
 
 from classes import Label, Location, Transition
@@ -9,23 +11,35 @@ def get_state_guard_boolean(token: Token):
     return None
 
 
-def create_transition(source: Location, target: Location, action: str, label: Label):
+def create_transition(source: Location, target: Location, action: str, label: Label |None):
     transition = Transition(source, target, action, [])
 
     # Check if transition already exists, add label if it does
     for t in source.transitions:
         if t == transition:
-            t.add_label(label)
+            if(label):
+                t.add_label(label)
             return t
-
-    transition.add_label(label)
+    if(label):
+        transition.add_label(label)
     source.transitions.append(transition)
     return transition
 
-def create_location(name: str, init: bool, pos_x: int, pos_y: int, all_locations: list[Location]):
+location_offset = 200
+inv_index = 0
+
+def create_location(name: str, init: bool, pos_x: int, pos_y: int, all_locations: list[Location], invariant=None):
+    global inv_index
     location = Location(name, generateId(len(all_locations)), [], init, pos_x, pos_y)
-    if(location in all_locations):
-        return
+    location.invariant = invariant
+
+    for loc in all_locations:
+        if loc == location:
+            return loc
+    if(location.name == "inv"):
+        location.name = "inv" + str(inv_index)
+        inv_index += 1
+    location.position.x = len(all_locations) * location_offset
     all_locations.append(location)
     return location
 
@@ -36,18 +50,24 @@ def get_location(name: str, all_locations: list[Location]):
     return None
 
 
-def commit_action(current: Location, action: Tree, channels: list[str]):
+def commit_action(current: Location, action: Tree, channels: list[str]) -> Transition | None:
     action_name = find_child(action, "ACTION_NAME").value
+
     if(not action_name):
         return None
+    
     channel_name = create_channel_name(action)
+
     if(channel_name not in channels):
         channels.append(channel_name)
+
     if(action.data == "concurrent_action"):
         current.set_committed(True)
+
     for transition in current.transitions:
         if transition.action == channel_name:
-            return transition.target
+            return transition
+        
     return None
 
 
@@ -62,7 +82,7 @@ def get_action_constraint(action: Tree):
     return None
 
 def constraint_to_string(constraint: tuple):
-    return f'x  &lt;= {constraint[2] * ( 60 if constraint[1] == "minutes" else 3600 if constraint[1] == "hours" else 1)}'
+    return f'x &lt;= {constraint[2] * ( 60 if constraint[1] == "minutes" else 3600 if constraint[1] == "hours" else 1)}'
 
 
 
@@ -99,7 +119,7 @@ def create_channel_name(action: Tree):
     return channel_name
 
 def generateId(index):
-    index += 1
+    #index += 1
     return "id" + index.__str__()
 
 
@@ -118,3 +138,27 @@ def find_first_data(tree: Tree, data: str):
 
 def guard_to_operator(guard: str):
     return "==" if guard == "equal to" else "&gt;" if guard == "greater than" else "&lt;"
+
+
+def state_guard_to_ctl_operator(guard: str):
+    return "" if guard == "is" else "" if guard == "are" else "not"
+
+def guards_to_operator(state_guard: str, guard: str):
+    state_guard_is_positive = state_guard == "is" or state_guard == "are"
+    if(state_guard_is_positive):
+        if(guard == "equal to"):
+            return "=="
+        if(guard == "greater than"):
+            return "&gt;"
+        if(guard == "less than"):
+            return "&lt;"
+    else:
+        if(guard == "equal to"):
+            return "!="
+        if(guard == "greater than"):
+            return "&lt;="
+        if(guard == "less than"):
+            return "&gt;="
+        
+def action_mode_is_positive(action_mode: str):
+    return False if action_mode == "I do not" else True

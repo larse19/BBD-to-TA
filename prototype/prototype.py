@@ -1,7 +1,8 @@
 import os
 
-from bddProcessor import parse
 from lark import Token, Tree
+
+from bddProcessor import parse
 
 dirname = os.path.dirname(__file__)
 
@@ -21,7 +22,9 @@ globalDeclarations = "clock x;\n"
 
 text = open(os.path.join(dirname, "BDD_full.txt"), "r")
 ast = parse(text.read())
-text.close
+text.close()
+
+
 
 location_x_offset = 100
 
@@ -154,8 +157,7 @@ for tree in ast.iter_subtrees():
 # Rule 1: The <domain model name> is converted into the name of the NTA, which consists of a set of TAs.
 # for test in ast.find_data("model"):
 #     for child in test.children:
-#         print(child)
-#         print("\n")
+
 model_name = next(ast.find_data("model")).children[0].lstrip(" ").rstrip("\n")
 
 
@@ -279,7 +281,7 @@ for scenario in scenarios:
     for _action in scenario.find_data("action"):
         action = create_channel_name(_action)
     
-    print(f"entity_name: {entity_name}, source: {source}, target: {target}, action: {action}\n")
+    # print(f"entity_name: {entity_name}, source: {source}, target: {target}, action: {action}\n")
 
     for template in templates:
         if template.name == entity_name:
@@ -321,7 +323,7 @@ globalDeclarationFinal = declarationStart + globalDeclarations + declarationEnd
 full_text_file += globalDeclarationFinal
 
 for template in templates:
-    print(template)
+    # print(template)
     template_text = "<template>\n"
     template_text += "\t<name>" + template.name + "</name>\n"
     init_text = ""

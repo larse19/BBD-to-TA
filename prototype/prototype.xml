@@ -1,95 +1,102 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
 <nta>
-<declaration>
+	<declaration>
 clock x;
-struct {
-	bool returned;
-} product;
-struct {
-	bool returned;
-	int value;
-} inserted_amount;
+int option;
+int inserted_amount;
+int product;
 chan insert_2;
-chan insert_2;
-chan select_Coke;
 chan select_Coke;
 chan select_ice;
-chan insert_2;
 chan cancel;
-chan insert_2;
 chan no_select;
 chan pick_Coke;
 chan no_pick_Coke;
-chan no_select;
 </declaration>
-<template>
-	<name>vending_machine</name>
-	<location id="id0" x="0" y="0"> 
-        <name x="20" y="0">idle</name>
-        
-    </location>
-	<location id="id2" x="200" y="0"> 
-        <name x="220" y="0">selection_mode</name>
-        
-    </location>
-	<location id="id3" x="400" y="0"> 
-        <name x="420" y="0">dispensing_mode</name>
-        <committed/>
-    </location>
-	<location id="id4" x="600" y="0"> 
-        <name x="620" y="0">extra_dispensing_mode</name>
-        
-    </location>
-	<init ref="id0"/>
-	<transition><source ref="id3"/><target ref="id4"/>
-	<label kind="synchronisation" x="500" y="-70">select_ice?</label>
-	<nail x="410" y="-50"/>
-	<nail x="590" y="-50"/>
-</transition>
-	<transition><source ref="id3"/><target ref="id0"/>
-	<label kind="synchronisation" x="200" y="50">pick_Coke?</label>
-	<nail x="390" y="50"/>
-	<nail x="10" y="50"/>
-</transition>
-	<transition><source ref="id3"/><target ref="id0"/>
-	<label kind="assignment" x="200" y="100">product.returned := true</label>
-	<label kind="synchronisation" x="200" y="115">no_pick_Coke?</label>
-	<nail x="390" y="100"/>
-	<nail x="10" y="100"/>
-</transition>
-	<transition><source ref="id2"/><target ref="id3"/>
-	<label kind="synchronisation" x="300" y="-70">select_Coke?</label>
-	<nail x="210" y="-50"/>
-	<nail x="390" y="-50"/>
-</transition>
-	<transition><source ref="id2"/><target ref="id0"/>
-	<label kind="assignment" x="100" y="150">inserted_amount.returned := true</label>
-	<label kind="synchronisation" x="100" y="165">cancel?</label>
-	<nail x="190" y="150"/>
-	<nail x="10" y="150"/>
-</transition>
-	<transition><source ref="id2"/><target ref="id0"/>
-	<label kind="assignment" x="100" y="200">inserted_amount.returned := true</label>
-	<label kind="synchronisation" x="100" y="215">no_select?</label>
-	<nail x="190" y="200"/>
-	<nail x="10" y="200"/>
-</transition>
-	<transition><source ref="id0"/><target ref="id2"/>
-	<label kind="assignment" x="100" y="-70">inserted_amount.value := 2</label>
-	<label kind="synchronisation" x="100" y="-85">insert_2?</label>
-	<nail x="10" y="-50"/>
-	<nail x="190" y="-50"/>
-</transition>
-	<transition><source ref="id0"/><target ref="id0"/>
-	<label kind="guard" x="0" y="-120">inserted_amount.value &lt; 2</label>
-	<label kind="assignment" x="0" y="-135">inserted_amount.returned := true</label>
-	<label kind="synchronisation" x="0" y="-150">no_select?</label>
-	<nail x="10" y="-100"/>
-	<nail x="-10" y="-100"/>
-</transition>
-</template>
-<system>
+	<template>
+		<name>vending_machine</name>
+		<location id="id0" x="0" y="0">
+			<name x="8" y="8">idle</name>
+		</location>
+		<location id="id1" x="0" y="119">
+			<name x="0" y="139">selection_mode</name>
+		</location>
+		<location id="id2" x="153" y="-102">
+			<name x="170" y="-93">dispensing_mode</name>
+		</location>
+		<location id="id3" x="153" y="119">
+			<name x="153" y="139">extra_dispensing_mode</name>
+		</location>
+		<location id="id4" x="0" y="-102">
+			<name x="17" y="-93">returned</name>
+		</location>
+		<init ref="id0"/>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="17" y="59">insert_2?</label>
+		</transition>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="110" y="0">select_Coke?</label>
+			<nail x="153" y="0"/>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id3"/>
+			<label kind="synchronisation" x="161" y="85">select_Coke?</label>
+		</transition>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id4"/>
+			<label kind="synchronisation" x="280" y="34">cancel?</label>
+		</transition>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id4"/>
+			<label kind="synchronisation" x="280" y="17">no_select?</label>
+		</transition>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="59" y="-51">pick_Coke?</label>
+		</transition>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id4"/>
+			<label kind="synchronisation" x="34" y="-127">no_pick_Coke?</label>
+		</transition>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id4"/>
+			<label kind="synchronisation" x="-76" y="-51">no_select?</label>
+		</transition>
+	</template>
+	<template>
+		<name>user</name>
+		<location id="id5" x="0" y="0">
+			<name x="0" y="20">idle</name>
+		</location>
+		<location id="id6" x="200" y="0">
+			<name x="200" y="20">selection_mode</name>
+		</location>
+		<location id="id7" x="300" y="0">
+			<name x="300" y="20">dispensing_mode</name>
+		</location>
+		<location id="id8" x="400" y="0">
+			<name x="400" y="20">extra_dispensing_mode</name>
+		</location>
+		<init ref="id5"/>
+	</template>
+	<system>
 system vending_machine, user;
 </system>
+	<queries>
+		<query>
+			<formula></formula>
+			<comment></comment>
+		</query>
+	</queries>
 </nta>

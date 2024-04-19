@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+	<declaration>
+clock x;
+struct {
+	bool returned;
+} product;
+struct {
+	bool returned;
+	int value;
+} inserted_amount;
+chan insert_2;
+chan select_Coke;
+chan select_ice;
+chan cancel;
+chan no_select;
+chan pick_Coke;
+chan no_pick_Coke;
+</declaration>
+	<template>
+		<name>vending_machine</name>
+		<location id="id0" x="0" y="0">
+			<name x="20" y="0">idle</name>
+		</location>
+		<location id="id1" x="200" y="0">
+			<name x="220" y="0">selection_mode</name>
+		</location>
+		<location id="id2" x="400" y="0">
+			<name x="420" y="0">dispensing_mode</name>
+			<committed/>
+		</location>
+		<location id="id3" x="600" y="0">
+			<name x="620" y="0">extra_dispensing_mode</name>
+		</location>
+		<init ref="id0"/>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="300" y="65">pick_Coke?</label>
+			<label kind="assignment" x="300" y="50">product.returned := true</label>
+			<nail x="590" y="50"/>
+			<nail x="10" y="50"/>
+		</transition>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="300" y="115">no_pick_Coke?</label>
+			<label kind="assignment" x="300" y="100">product.returned := true</label>
+			<nail x="590" y="100"/>
+			<nail x="10" y="100"/>
+		</transition>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id3"/>
+			<label kind="synchronisation" x="500" y="-70">select_ice?</label>
+			<nail x="410" y="-50"/>
+			<nail x="590" y="-50"/>
+		</transition>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="200" y="165">pick_Coke?</label>
+			<label kind="assignment" x="200" y="150">product.returned := true</label>
+			<nail x="390" y="150"/>
+			<nail x="10" y="150"/>
+		</transition>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="200" y="215">no_pick_Coke?</label>
+			<label kind="assignment" x="200" y="200">product.returned := true</label>
+			<nail x="390" y="200"/>
+			<nail x="10" y="200"/>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="300" y="-70">select_Coke?</label>
+			<nail x="210" y="-50"/>
+			<nail x="390" y="-50"/>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="100" y="265">cancel?</label>
+			<label kind="assignment" x="100" y="250">inserted_amount.returned := true</label>
+			<nail x="190" y="250"/>
+			<nail x="10" y="250"/>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="100" y="315">no_select?</label>
+			<label kind="assignment" x="100" y="300">inserted_amount.returned := true</label>
+			<nail x="190" y="300"/>
+			<nail x="10" y="300"/>
+		</transition>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="100" y="-85">insert_2?</label>
+			<label kind="assignment" x="100" y="-70">inserted_amount.value := 2</label>
+			<nail x="10" y="-50"/>
+			<nail x="190" y="-50"/>
+		</transition>
+	</template>
+	<template>
+		<name>user</name>
+		<location id="id4" x="-8" y="-51">
+			<name x="12" y="-51">idle</name>
+		</location>
+		<location id="id5" x="200" y="0">
+			<name x="220" y="0">selection_mode</name>
+		</location>
+		<location id="id6" x="400" y="0">
+			<name x="420" y="0">dispensing_mode</name>
+			<committed/>
+		</location>
+		<location id="id7" x="600" y="0">
+			<name x="620" y="0">extra_dispensing_mode</name>
+		</location>
+		<location id="id8" x="816" y="442">
+			<name x="836" y="442">inv6</name>
+			<label kind="invariant" x="836" y="462">x &lt;= 10</label>
+		</location>
+		<location id="id9" x="688" y="374">
+			<name x="708" y="374">inv7</name>
+			<label kind="invariant" x="708" y="394">x &lt;= 10</label>
+		</location>
+		<location id="id10" x="408" y="272">
+			<name x="428" y="272">inv4</name>
+			<label kind="invariant" x="428" y="292">x &lt;= 10</label>
+		</location>
+		<location id="id11" x="501" y="331">
+			<name x="521" y="331">inv5</name>
+			<label kind="invariant" x="521" y="351">x &lt;= 10</label>
+		</location>
+		<location id="id12" x="255" y="-34">
+			<name x="275" y="-34">inv1</name>
+			<label kind="invariant" x="275" y="-14">x &lt;= 5</label>
+		</location>
+		<location id="id13" x="204" y="68">
+			<name x="224" y="68">inv2</name>
+			<label kind="invariant" x="224" y="88">x &lt;= 5</label>
+		</location>
+		<location id="id14" x="323" y="187">
+			<name x="343" y="187">inv3</name>
+			<label kind="invariant" x="343" y="207">x &lt;= 5</label>
+		</location>
+		<init ref="id4"/>
+		<transition>
+			<source ref="id7"/>
+			<target ref="id8"/>
+		</transition>
+		<transition>
+			<source ref="id8"/>
+			<target ref="id4"/>
+			<label kind="synchronisation" x="279" y="457">pick_Coke!</label>
+			<nail x="569" y="442"/>
+			<nail x="-11" y="442"/>
+		</transition>
+		<transition>
+			<source ref="id7"/>
+			<target ref="id9"/>
+		</transition>
+		<transition>
+			<source ref="id9"/>
+			<target ref="id4"/>
+			<label kind="synchronisation" x="288" y="389">no_pick_Coke!</label>
+			<nail x="578" y="374"/>
+			<nail x="-2" y="374"/>
+		</transition>
+		<transition>
+			<source ref="id6"/>
+			<target ref="id7"/>
+			<label kind="synchronisation" x="500" y="-70">select_ice!</label>
+			<nail x="410" y="-50"/>
+			<nail x="590" y="-50"/>
+		</transition>
+		<transition>
+			<source ref="id6"/>
+			<target ref="id10"/>
+		</transition>
+		<transition>
+			<source ref="id10"/>
+			<target ref="id4"/>
+			<label kind="synchronisation" x="215" y="287">pick_Coke!</label>
+			<nail x="25" y="272"/>
+		</transition>
+		<transition>
+			<source ref="id6"/>
+			<target ref="id11"/>
+		</transition>
+		<transition>
+			<source ref="id11"/>
+			<target ref="id4"/>
+			<label kind="synchronisation" x="207" y="346">no_pick_Coke!</label>
+			<nail x="397" y="331"/>
+			<nail x="17" y="331"/>
+		</transition>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id12"/>
+		</transition>
+		<transition>
+			<source ref="id12"/>
+			<target ref="id6"/>
+			<label kind="synchronisation" x="300" y="-70">select_Coke!</label>
+			<nail x="280" y="-51"/>
+			<nail x="390" y="-50"/>
+		</transition>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id13"/>
+		</transition>
+		<transition>
+			<source ref="id13"/>
+			<target ref="id4"/>
+			<label kind="synchronisation" x="114" y="134">cancel!</label>
+			<nail x="204" y="119"/>
+			<nail x="24" y="119"/>
+		</transition>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id14"/>
+		</transition>
+		<transition>
+			<source ref="id14"/>
+			<target ref="id4"/>
+			<label kind="synchronisation" x="122" y="202">no_select!</label>
+			<nail x="212" y="187"/>
+			<nail x="32" y="187"/>
+		</transition>
+		<transition>
+			<source ref="id4"/>
+			<target ref="id5"/>
+			<label kind="synchronisation" x="100" y="-85">insert_2!</label>
+			<nail x="10" y="-50"/>
+			<nail x="190" y="-50"/>
+		</transition>
+	</template>
+	<system>
+system vending_machine,user;
+</system>
+	<queries>
+		<query>
+			<formula></formula>
+			<comment></comment>
+		</query>
+	</queries>
+</nta>

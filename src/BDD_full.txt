@@ -8,6 +8,7 @@ entity vending_machine {
 
 entity product {
   states: returned
+  properties: type
 }
 
 entity inserted_amount {
@@ -21,6 +22,11 @@ When I insert 2
 Then the value of the inserted_amount is equal to 2 
 And the vending_machine is in selection_mode
 
+Scenario: product_is_coke
+Given the vending_machine is in selection_mode
+When I select the product "Coke"
+Then the type of the product is equal to Coke 
+
 Scenario: Successful_dispensing_with_no_extras
 Given the vending_machine is idle
 When I insert 2
@@ -31,7 +37,8 @@ Scenario: Dispensing_drink_with_extras
 Given the vending_machine is in selection_mode
 When I select the product "Coke" within 5 seconds
 And I concurrently select the option "ice" on the vending_machine
-Then the vending_machine is in extra_dispensing_mode
+Then the option of the vending_machine is equal to ice
+And the vending_machine is in extra_dispensing_mode
 
 Scenario: Canceling_operation
 Given the vending_machine is idle
@@ -50,10 +57,23 @@ And the vending_machine is idle
 Scenario: Drink_picked_successfully
 Given the vending_machine is in dispensing_mode
 When I pick the product "Coke" within 10 seconds
-Then the vending_machine is idle
+Then the product "Coke" is returned
+And the vending_machine is idle
 
 Scenario: Machine_should_return_unpicked_products
 Given the vending_machine is in dispensing_mode
+When I do not pick the product "Coke" within 10 seconds
+Then the product "Coke" is returned
+And the vending_machine is idle
+
+Scenario: Drink_picked_successfully_x
+Given the vending_machine is in extra_dispensing_mode
+When I pick the product "Coke" within 10 seconds
+Then the product "Coke" is returned
+And the vending_machine is idle
+
+Scenario: Machine_should_return_unpicked_products_x
+Given the vending_machine is in extra_dispensing_mode
 When I do not pick the product "Coke" within 10 seconds
 Then the product "Coke" is returned
 And the vending_machine is idle

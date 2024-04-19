@@ -46,6 +46,7 @@ class Transition:
         self.target = target
         self.action = action
         self.labels = labels
+        self.invariant_location: "Location" = None
 
     def add_label(self, label: "Label"):
         if(label in self.labels):
@@ -59,6 +60,8 @@ class Transition:
         return f"({self.source.name} -> {self.target.name} : {self.action})"
     
     def __eq__(self, __value: object) -> bool:
+        if(self.target is None):
+            return self.source == __value.source and self.action == __value.action
         return self.source == __value.source and self.target == __value.target and self.action == __value.action
 
 class Label:
@@ -85,6 +88,7 @@ class Location:
         self.position = Position(pos_x, pos_y)
         self.transitions = transitions
         self.committed = False
+        self.invariant = None
 
     def __str__(self):
         return f"({self.name}, {self.transitions})"
@@ -95,7 +99,7 @@ class Location:
     def __eq__(self, __value: object) -> bool:
         if(__value is None):
             return False
-        return self.name == __value.name
+        return self.name == __value.name and self.invariant == __value.invariant
     
     def set_committed(self, committed: bool):
         self.committed = committed
