@@ -1,6 +1,23 @@
 from classes import Location, Nails, Position, Transition
 
 
+def nail_between_nails(nail: Nails, all: list[Nails]):
+    if(nail in all):
+        return True
+    for n in all:
+        # if the line between the position of the nails of "nail" cross the line of any other set of nails, return True
+
+
+
+        if(n.nail1.y == nail.nail1.y):
+            # if any of the nails, are between two existing nails
+            if((n.nail1.x < nail.nail2.x and n.nail1.x > nail.nail1.x) or (n.nail1.x > nail.nail2.x and n.nail1.x < nail.nail1.x) or 
+                (n.nail2.x < nail.nail2.x and n.nail2.x > nail.nail1.x) or (n.nail2.x > nail.nail2.x and n.nail2.x < nail.nail1.x)):
+                return True
+
+
+                
+
 def build_ta(name: str, init_location: Location):
     template_text = "<template>\n"
     template_text += "\t<name>" + name + "</name>\n"
@@ -18,27 +35,31 @@ def build_ta(name: str, init_location: Location):
 
     def get_transition_nails(source: Location, target: Location):
         nonlocal nail_positions
+        location_offset = 200
+        distance = abs(target.position.x - source.position.x)
         if(target_is_left_of_source(source, target)):
-            position = Nails(
-                Position(source.position.x - 10,  50),
-                Position(target.position.x + 10,  50)
+            nails = Nails(
+                Position(source.position.x - 10, int(((distance / location_offset) )) * 50),
+                Position(target.position.x + 10,  int(((distance / location_offset) )) * 50)
             )
-            while (position in nail_positions):
-                position.nail1.y += 50
-                position.nail2.y += 50
-            nail_positions.append(position)
-            return position
+            while (nail_between_nails(nails, nail_positions)):
+                nails.nail1.y += 50
+                nails.nail2.y += 50
+
+            nail_positions.append(nails)
+            return nails
         
 
-        position = Nails(
-            Position(source.position.x + 10, -  50),
-            Position(target.position.x - 10, -  50)
+        nails = Nails(
+            Position(source.position.x + 10, - int(((distance / location_offset) ))* 50),
+            Position(target.position.x - 10, - int(((distance / location_offset) ))* 50)
         )
-        while (position in nail_positions):
-            position.nail1.y -= 50
-            position.nail2.y -= 50
-        nail_positions.append(position)
-        return position
+        while (nail_between_nails(nails, nail_positions)):
+            nails.nail1.y -= 50
+            nails.nail2.y -= 50
+
+        nail_positions.append(nails)
+        return nails
         
     def calculate_label_position(transition: Transition, nails: Nails):
         nonlocal label_positions
@@ -73,9 +94,9 @@ def build_ta(name: str, init_location: Location):
         for label in transition.labels:
             position = calculate_label_position(transition, nails)
             transitions_text += f'\t<label kind="{label.kind}" x="{position.x}" y="{position.y}">{label.text}</label>\n'
-
-        transitions_text += f'\t<nail x="{nails.nail1.x}" y="{nails.nail1.y}"/>\n'
-        transitions_text += f'\t<nail x="{nails.nail2.x}" y="{nails.nail2.y}"/>\n'
+        if(nails.nail1.y != 0):
+            transitions_text += f'\t<nail x="{nails.nail1.x}" y="{nails.nail1.y}"/>\n'
+            transitions_text += f'\t<nail x="{nails.nail2.x}" y="{nails.nail2.y}"/>\n'
         transitions_text += "</transition>\n"
     
     def print_location_to_file(location: Location):

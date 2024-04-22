@@ -123,20 +123,21 @@ def create_user(ast: ParseTree) -> tuple[str, list[Location]]:
 
 
                     constraint = get_action_constraint(action)
-                    if(constraint):
-                        invariant_location = create_location("inv_" + action_name, False, 0 ,0 ,all_locations, constraint_to_string(constraint))
-                        for label in labels:
-                            transition = create_transition(current_location, invariant_location, action_name, label)
-                            if(target == initial_location):
-                                transition = create_transition(invariant_location, target, action_name, Label("assignment", "x := 0"))
-                            else:
-                                transition = create_transition(invariant_location, target, action_name, None)
-                            transition.invariant_location = invariant_location
-                    else:
-                        for label in labels:
-                            transition = create_transition(current_location, target, action_name, label)
+                    if(current_location != target):
+                        if(constraint):
+                            invariant_location = create_location("inv_" + action_name, False, 0 ,0 ,all_locations, constraint_to_string(constraint))
+                            for label in labels:
+                                transition = create_transition(current_location, invariant_location, action_name, label)
+                                if(target == initial_location):
+                                    transition = create_transition(invariant_location, target, action_name, Label("assignment", "x := 0"))
+                                else:
+                                    transition = create_transition(invariant_location, target, action_name, None)
+                                transition.invariant_location = invariant_location
+                        else:
+                            for label in labels:
+                                transition = create_transition(current_location, target, action_name, label)
 
-                    current_location = target
+                        current_location = target
                 else:
                     current_location = next_location
                     
