@@ -74,7 +74,7 @@ def create_user(ast: ParseTree) -> tuple[str, list[Location]]:
     # Create locations for all states in the main entity
     for state in entities[0].states:
         create_location(state,  False, location_index * location_x_offset, 0, all_locations)
-
+    
     for scenario in scenarios:
         current_location = None
         labels = []
