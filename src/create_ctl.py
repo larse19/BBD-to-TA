@@ -1,15 +1,10 @@
-import os
 from itertools import chain
-from typing import List, get_type_hints
 
-from lark import Token, Tree
+from lark import ParseTree, Token, Tree
 
-from bddProcessor import parse
 from classes import Location
-from helper_functions import (action_mode_is_positive, commit_action,
-                              create_channel_name, find_child, get_location,
-                              guard_to_operator, guards_to_operator,
-                              state_guard_to_ctl_operator)
+from helper_functions import (commit_action, find_child, get_location,
+                              guards_to_operator, state_guard_to_ctl_operator)
 
 
 def given_clause_to_ctl(clause: Tree):
@@ -19,13 +14,20 @@ def given_clause_to_ctl(clause: Tree):
     entity_name = None
     guard = None
     state_guard = None
+    entity_instance = None
+    property_instance = None
     for child in clause.children:
+        print(child)
         if isinstance(child, Tree) and child.data == "entity_property":
             for subchild in child.children:
                 if isinstance(subchild, Token) and subchild.type == "ENTITY_NAME":
                     entity_name = subchild.value
                 if isinstance(subchild, Token) and subchild.type == "PROPERTY_NAME":
                     property_name = subchild.value
+                if isinstance(subchild, Token) and subchild.type == "PROPERTY_INSTANCE":
+                    property_instance = subchild.value
+                if isinstance(subchild, Token) and subchild.type == "ENTITY_INSTANCE":
+                    entity_instance = subchild.value
         if isinstance(child, Token) and child.type == "STATE_NAME":
             state_name = child.value
         if isinstance(child, Token) and child.type == "STATE_GUARD":
@@ -35,17 +37,27 @@ def given_clause_to_ctl(clause: Tree):
         if isinstance(child, Token) and child.type == "GUARD":
             guard = child.value
 
-    # if clause points to a state -> TA_name.state_name
+    # if clause points to a property instance: property_instance (= | <= | >=) value
+    if(property_instance):
+        return f'{property_instance} {guards_to_operator(state_guard,guard)} true'
+    
+    # if clause points to a entity instance: entity_instance (= | <= | >=) value
+    if(entity_instance):
+        return f'{entity_instance} {guards_to_operator(state_guard,guard)} true'
+
+    # if clause points to a state: (not)? TA_name.state_name
     if(state_name):
         return f'{state_guard_to_ctl_operator(state_guard)} {entity_name}.{state_name} '
 
-    #if clause points to a property -> [entity.](entity_instance | property_instance) (= | <= | >=) value
+    #if clause points to a property: [entity.](entity_instance | property_instance) (= | <= | >=) value
     if(property_value):
         try:
             int(property_value)
             return f' {entity_name}.{property_name} {guards_to_operator(state_guard,guard)} {property_value} '
         except ValueError:
             return  f'{property_value} {guards_to_operator(state_guard,guard)} true'
+    
+
 
 
 
@@ -55,9 +67,12 @@ def action_target_to_ctl(target: str)-> str:
 
 def evaluate_action(action: Tree, current_location_name: str, user_locations: list[Location]) -> Location:
     location = get_location(current_location_name, user_locations)
+    if(not location):
+        return None
     t = commit_action(location, action, [])
     if t:
-        return t.target.name
+        if(t.target):
+            return t.target.name
     return None
 
     
@@ -105,12 +120,7 @@ def evaluate_action(action: Tree, current_location_name: str, user_locations: li
     # return statement
 
 # returns list of (ctl, scenario_name)
-def create_ctl(user_locations: list[Location]) -> list[(str, str)]:
-    dirname = os.path.dirname(__file__)
-
-    text = open(os.path.join(dirname, "BDD_full.txt"), "r")
-    ast = parse(text.read())
-    text.close()
+def create_ctl(ast:ParseTree, user_locations: list[Location]) -> list[(str, str)]:
 
     ctls = []
 

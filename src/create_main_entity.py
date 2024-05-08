@@ -3,14 +3,11 @@ from itertools import chain
 
 from lark import ParseTree, Token, Tree
 
-from build_xml import build, build_ctl, build_ta
 from classes import Entity, Label, Location
-from create_ctl import create_ctl
-from create_user import create_user
-from helper_functions import (commit_action, create_channel_name,
-                              create_location, create_transition, find_child,
-                              get_location, get_state_guard_boolean,
-                              guard_to_operator)
+from helper_functions import (add_label, add_variable, commit_action,
+                              create_channel_name, create_location,
+                              create_transition, find_child, get_location,
+                              get_state_guard_boolean, guard_to_operator)
 
 
 def create_main_ta(ast: ParseTree) -> tuple[str, list[Location], list[str], list[str], list[str]]:
@@ -103,10 +100,10 @@ def create_main_ta(ast: ParseTree) -> tuple[str, list[Location], list[str], list
         create_entity_type(entities[i])
 
     for scenario in scenarios:
-        print("\n", scenario.children[0].value)
         current_location = None
         labels = []
         for given in scenario.find_data("given_clause"):
+            # print("GIVEN", given)
             # print(given)
             given_entity = ""
             property_name = ""
@@ -115,6 +112,11 @@ def create_main_ta(ast: ParseTree) -> tuple[str, list[Location], list[str], list
                 if(isinstance(child, Token)):
                     if(child.type == "GUARD"):
                         guard = guard_to_operator(child.value)
+                    elif(child.type == "PROPERTY_VALUE"):
+                        if(given_entity):
+                            add_label(labels, Label("guard", [f'{(given_entity + ".") if given_entity != main_entity.name else ""}{property_name} {guard} {child.value}']))
+                        else:
+                            add_label(labels, Label("guard", [f'{property_name} {guard} {child.value}']))
                 if(isinstance(child, Tree)):
                     entity_name = find_child(child, "ENTITY_NAME")
                     if(entity_name):
@@ -122,87 +124,93 @@ def create_main_ta(ast: ParseTree) -> tuple[str, list[Location], list[str], list
                     _property_name = find_child(child, "PROPERTY_NAME")
                     if(_property_name):
                         property_name = _property_name.value
-                elif(given_entity):
-                    if(child.type == "PROPERTY_VALUE"):
-                        labels.append(Label("guard", f'{(given_entity + ".") if given_entity != main_entity.name else ""}{property_name} {guard} {child.value}'))
+            
+            # print("given:", given_entity, "property:", property_name,"guard:", guard)
 
             entity = given.children[0]
             source = find_child(given, "STATE_NAME")
             if(not source):
                 continue
-            current_location = get_location(source.value, all_locations)
-        if(current_location):
-            for action in chain(scenario.find_data("action"), scenario.find_data("concurrent_action")):
-                action_name = create_channel_name(action)
-                action_transition = commit_action(current_location, action, channels)
-                next_location = None
-                if(action_transition):
-                    next_location = action_transition.target
+            if(given_entity == main_entity.name):
+                current_location = get_location(source.value, all_locations)
+        for action in chain(scenario.find_data("action"), scenario.find_data("concurrent_action")):
+            if(current_location != None):
 
-                if(not next_location):
-                    target = next_location
-                    # labels = [] 
-                    # constraint = get_action_constraint(action)
-                    # if(constraint):
-                    #     labels.append(Label("guard", constraint_to_string(constraint)))
+                action_name = create_channel_name(action)
+                
+                action_transition = commit_action(current_location, action, channels)
+
+                # Set target as next location from action transition
+                target = None
+                if(action_transition):
+                    target = action_transition.target
+
+                # Find target location
+                if(not target):
                     for then_clause in scenario.find_data("then_clause"):
                         then_entity = ""
-                        then_property = ""
-                        then_entity_instance = ""
-                        last_guard = "true"
                         for child in then_clause.children:
                             if(isinstance(child, Tree)):
-                                print(then_clause)
                                 entity_name = find_child(child, "ENTITY_NAME")
                                 if(entity_name):
                                     then_entity = entity_name.value
-                                property_name = find_child(child, "PROPERTY_NAME")
-                                if(property_name):
-                                    then_property = property_name.value
-                                entity_instance = find_child(child, "ENTITY_INSTANCE")
-                                if(entity_instance):
-                                    then_entity_instance = entity_instance.value
-                                print(then_entity, then_property, then_entity_instance)
-                                    
                             else:
                                 if(then_entity == main_entity.name):
                                     if(child.type == "STATE_NAME"):
                                         target = get_location(child.value, all_locations)
-                                        # TODO: add ! sync to user template
-                                        labels.append(Label("synchronisation", action_name + "?"))
-                                        if(not target):
-                                            # print("!!!",child.value)
-                                            pass
-                                    elif(child.type == "PROPERTY_VALUE" or child.type == "PROPERTY_INSTANCE"):
-                                        try:
-                                            int(child.value)
-                                            labels.append(Label("assignment", f'{then_property} := {child.value}'))
-                                            variable_names.append(then_property)
-                                        except ValueError:
-                                            variable_names.append(child.value)
-                                            labels.append(Label("assignment", f'{child.value} := true'))
-                                else:
-                                    if(child.type == "STATE_GUARD"):
-                                        last_guard = get_state_guard_boolean(child)
-                                    # print(child.type, child.value)
-                                    # TODO: update entity struct
-                                    if(child.type == "STATE_NAME"):
-                                        labels.append(Label("assignment", f'{then_entity}.{child.value} := {last_guard}'))
-                                    elif(child.type == "PROPERTY_VALUE" or child.type == "PROPERTY_INSTANCE"):
-                                        try:
-                                            int(child.value)
-                                            labels.append(Label("assignment", f'{then_entity}.{then_property} := {child.value}'))
-                                        except ValueError:
-                                            variable_names.append(child.value)
-                                            labels.append(Label("assignment", f'{child.value} := true'))
-                    if(action_transition):
-                        action_transition.target = target
-
-                    for label in labels:
-                        create_transition(current_location, target, action_name, label)
-                    current_location = target
+                                        add_label(labels, Label("synchronisation", [action_name + "?"]))
+                        if(target):
+                            break
                 else:
-                    current_location = next_location
+                    current_location = target
+
+                for then_clause in scenario.find_data("then_clause"):
+                    then_entity = ""
+                    then_property = ""  
+                    last_guard = "true"
+                    for child in then_clause.children:
+                        if(isinstance(child, Tree)):
+                            entity_name = find_child(child, "ENTITY_NAME")
+                            if(entity_name):
+                                then_entity = entity_name.value
+                            property_name = find_child(child, "PROPERTY_NAME")
+                            if(property_name):
+                                then_property = property_name.value
+                                
+                        else:
+                            if(then_entity == main_entity.name):
+                                if(child.type == "STATE_NAME"):
+                                    pass
+                                elif(child.type == "PROPERTY_VALUE" or child.type == "PROPERTY_INSTANCE"):
+                                    try:
+                                        int(child.value)
+                                        add_label(labels, Label("assignment", [f'{then_property} := {child.value}']))
+                                        add_variable(variable_names, then_property)
+                                    except ValueError:
+                                        add_label(labels, Label("assignment", [f'{child.value} := true']))
+                                        add_variable(variable_names, child.value)
+                            else:
+                                if(child.type == "STATE_GUARD"):
+                                    last_guard = get_state_guard_boolean(child)
+                                if(child.type == "STATE_NAME"):
+                                    add_label(labels, Label("assignment", [f'{then_entity}.{child.value} := {last_guard}']))
+                                elif(child.type == "PROPERTY_VALUE" or child.type == "PROPERTY_INSTANCE" or child.type == "ENTITY_INSTANCE"):
+                                    try:
+                                        int(child.value)
+                                        if(then_entity):
+                                            add_label(labels, Label("assignment", [f'{then_entity}.{then_property} := {child.value}']))
+                                        else:
+                                            add_label(labels, Label("assignment", [f'{then_property} := {child.value}']))
+                                            add_variable(variable_names, then_property)
+                                    except ValueError:
+                                        add_variable(variable_names, child.value)
+                                        add_label(labels, Label("assignment", [f'{child.value} := true']))
+                if(action_transition):
+                    action_transition.target = target
+
+                for label in labels:
+                    create_transition(current_location, target, action_name, label)
+                current_location = target
                 
     for variable in variable_names:
         globalDeclarations.append(f'bool {variable};')

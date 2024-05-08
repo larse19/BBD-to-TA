@@ -5,16 +5,12 @@
 clock x;
 struct {
 	bool returned;
-	int type;
 } product;
 
 struct {
 	bool returned;
-	int value;
 } inserted_amount;
 
-bool Coke;
-bool ice;
 chan insert_2;
 chan select_Coke;
 chan select_ice;
@@ -38,39 +34,24 @@ chan no_pick_Coke;</declaration>
         <name x="620" y="0">extra_dispensing_mode</name>
 	</location>
 	<init ref="id0"/>
-	<transition><source ref="id3"/><target ref="id0"/>
-	<label kind="synchronisation" x="300" y="150">pick_Coke?</label>
-	<label kind="assignment" x="300" y="170">product.returned := true</label>
-	<nail x="590" y="150"/>
-	<nail x="10" y="150"/>
-</transition>
-	<transition><source ref="id3"/><target ref="id0"/>
-	<label kind="synchronisation" x="300" y="200">no_pick_Coke?</label>
-	<label kind="assignment" x="300" y="220">product.returned := true</label>
-	<nail x="590" y="200"/>
-	<nail x="10" y="200"/>
-</transition>
 	<transition><source ref="id2"/><target ref="id3"/>
-	<label kind="assignment" x="500" y="-70">ice := true</label>
-	<label kind="synchronisation" x="500" y="-90">select_ice?</label>
+	<label kind="synchronisation" x="500" y="-70">select_ice?</label>
 	<nail x="410" y="-50"/>
 	<nail x="590" y="-50"/>
 </transition>
 	<transition><source ref="id2"/><target ref="id0"/>
 	<label kind="synchronisation" x="200" y="100">pick_Coke?</label>
-	<label kind="assignment" x="200" y="120">product.returned := true</label>
 	<nail x="390" y="100"/>
 	<nail x="10" y="100"/>
 </transition>
 	<transition><source ref="id2"/><target ref="id0"/>
-	<label kind="synchronisation" x="200" y="250">no_pick_Coke?</label>
-	<label kind="assignment" x="200" y="270">product.returned := true</label>
-	<nail x="390" y="250"/>
-	<nail x="10" y="250"/>
+	<label kind="synchronisation" x="200" y="150">no_pick_Coke?</label>
+	<label kind="assignment" x="200" y="170">product.returned := true</label>
+	<nail x="390" y="150"/>
+	<nail x="10" y="150"/>
 </transition>
 	<transition><source ref="id1"/><target ref="id2"/>
-	<label kind="guard" x="300" y="-70">inserted_amount.value == 2</label>
-	<label kind="synchronisation" x="300" y="-90">select_Coke?</label>
+	<label kind="synchronisation" x="300" y="-70">select_Coke?</label>
 	<nail x="210" y="-50"/>
 	<nail x="390" y="-50"/>
 </transition>
@@ -81,14 +62,13 @@ chan no_pick_Coke;</declaration>
 	<nail x="10" y="50"/>
 </transition>
 	<transition><source ref="id1"/><target ref="id0"/>
-	<label kind="assignment" x="100" y="300">inserted_amount.returned := true</label>
-	<label kind="synchronisation" x="100" y="320">no_select?</label>
-	<nail x="190" y="300"/>
-	<nail x="10" y="300"/>
+	<label kind="assignment" x="100" y="200">inserted_amount.returned := true</label>
+	<label kind="synchronisation" x="100" y="220">no_select?</label>
+	<nail x="190" y="200"/>
+	<nail x="10" y="200"/>
 </transition>
 	<transition><source ref="id0"/><target ref="id1"/>
 	<label kind="synchronisation" x="100" y="-70">insert_2?</label>
-	<label kind="assignment" x="100" y="-90">inserted_amount.value := 2</label>
 	<nail x="10" y="-50"/>
 	<nail x="190" y="-50"/>
 </transition>
@@ -153,16 +133,6 @@ chan no_pick_Coke;</declaration>
 	<nail x="790" y="100"/>
 	<nail x="410" y="100"/>
 </transition>
-	<transition><source ref="id3"/><target ref="id7"/>
-	<label kind="synchronisation" x="1000" y="-220">pick_Coke!</label>
-	<nail x="610" y="-200"/>
-	<nail x="1390" y="-200"/>
-</transition>
-	<transition><source ref="id3"/><target ref="id8"/>
-	<label kind="synchronisation" x="1100" y="-370">no_pick_Coke!</label>
-	<nail x="610" y="-350"/>
-	<nail x="1590" y="-350"/>
-</transition>
 	<transition><source ref="id4"/><target ref="id3"/>
 	<label kind="synchronisation" x="700" y="50">select_ice!</label>
 	<nail x="790" y="50"/>
@@ -179,9 +149,9 @@ chan no_pick_Coke;</declaration>
 	<nail x="10" y="250"/>
 </transition>
 	<transition><source ref="id1"/><target ref="id5"/>
-	<label kind="synchronisation" x="600" y="-420">cancel!</label>
-	<nail x="210" y="-400"/>
-	<nail x="990" y="-400"/>
+	<label kind="synchronisation" x="600" y="-220">cancel!</label>
+	<nail x="210" y="-200"/>
+	<nail x="990" y="-200"/>
 </transition>
 	<transition><source ref="id6"/><target ref="id0"/>
 	<label kind="assignment" x="600" y="300">x := 0</label>
@@ -189,10 +159,9 @@ chan no_pick_Coke;</declaration>
 	<nail x="10" y="300"/>
 </transition>
 	<transition><source ref="id1"/><target ref="id6"/>
-	<label kind="synchronisation" x="700" y="-470">no_select!</label>
-	<label kind="guard" x="700" y="-490">inserted_amount.value &lt; 2</label>
-	<nail x="210" y="-450"/>
-	<nail x="1190" y="-450"/>
+	<label kind="synchronisation" x="700" y="-370">no_select!</label>
+	<nail x="210" y="-350"/>
+	<nail x="1190" y="-350"/>
 </transition>
 	<transition><source ref="id0"/><target ref="id1"/>
 	<label kind="synchronisation" x="100" y="-70">insert_2!</label>
@@ -207,22 +176,17 @@ system vending_machine,user;
     <queries>
     
         <query>
-            <formula>( vending_machine.idle  and  product.returned ) --> ( inserted_amount.value == 2  and  vending_machine.selection_mode )</formula>
+            <formula>( vending_machine.idle  and user.selection_mode) --> ( vending_machine.selection_mode )</formula>
 			<comment>Waiting_for_drink_selection</comment>
         </query>
         
         <query>
-            <formula>( vending_machine.selection_mode  and  inserted_amount.value == 2  and user.inv_select_Coke) --> ( vending_machine.dispensing_mode )</formula>
-			<comment>select_drink</comment>
-        </query>
-        
-        <query>
-            <formula>( vending_machine.idle  and user.inv_select_Coke) --> (Coke == true and  vending_machine.dispensing_mode )</formula>
+            <formula>( vending_machine.idle  and user.inv_select_Coke) --> ( vending_machine.dispensing_mode )</formula>
 			<comment>Successful_dispensing_with_no_extras</comment>
         </query>
         
         <query>
-            <formula>( vending_machine.selection_mode  and user.extra_dispensing_mode) --> (ice == true and  vending_machine.extra_dispensing_mode )</formula>
+            <formula>( vending_machine.selection_mode  and user.extra_dispensing_mode) --> ( vending_machine.extra_dispensing_mode )</formula>
 			<comment>Dispensing_drink_with_extras</comment>
         </query>
         
@@ -237,7 +201,7 @@ system vending_machine,user;
         </query>
         
         <query>
-            <formula>( vending_machine.dispensing_mode  and user.inv_pick_Coke) --> ( product.returned  and  vending_machine.idle )</formula>
+            <formula>( vending_machine.dispensing_mode  and user.inv_pick_Coke) --> ( vending_machine.idle )</formula>
 			<comment>Drink_picked_successfully</comment>
         </query>
         
@@ -247,17 +211,7 @@ system vending_machine,user;
         </query>
         
         <query>
-            <formula>( vending_machine.extra_dispensing_mode  and user.inv_pick_Coke) --> ( product.returned  and  vending_machine.idle )</formula>
-			<comment>Drink_picked_successfully_x</comment>
-        </query>
-        
-        <query>
-            <formula>( vending_machine.extra_dispensing_mode  and user.inv_no_pick_Coke) --> ( product.returned  and  vending_machine.idle )</formula>
-			<comment>Machine_should_return_unpicked_products_x</comment>
-        </query>
-        
-        <query>
-            <formula>( vending_machine.selection_mode  and  inserted_amount.value &lt; 2  and user.inv_no_select) --> ( inserted_amount.returned  and  vending_machine.idle )</formula>
+            <formula>( vending_machine.idle  and  inserted_amount.value &lt; 2 ) --> ( inserted_amount.returned  and  vending_machine.idle )</formula>
 			<comment>Not_enough_money</comment>
         </query>
         

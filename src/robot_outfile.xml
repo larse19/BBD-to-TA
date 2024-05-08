@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+    <!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+    <nta>
+<declaration>
+clock x;
+struct {
+	bool fixed;
+	bool picked_and_placed;
+} object;
+
+struct {
+	bool open;
+	bool closed;
+} gripper;
+
+bool remaining_object_amount;
+chan press_start;
+chan press_Five;
+chan press_Open_Gripper;
+chan press_Ten;</declaration>
+<template>
+	<name>robot</name>
+	<location id="id0" x="0" y="0"> 
+        <name x="20" y="0">default</name>
+	</location>
+	<location id="id1" x="200" y="0"> 
+        <name x="220" y="0">select_mode</name>
+		<committed/>
+	</location>
+	<init ref="id0"/>
+	<transition><source ref="id1"/><target ref="id0"/>
+	<label kind="assignment" x="100" y="50">object.picked_and_placed := true</label>
+	<label kind="synchronisation" x="100" y="70">press_Five?</label>
+	<nail x="190" y="50"/>
+	<nail x="10" y="50"/>
+</transition>
+	<transition><source ref="id1"/><target ref="id0"/>
+	<label kind="assignment" x="100" y="100">object.picked_and_placed := true</label>
+	<label kind="synchronisation" x="100" y="120">press_Open_Gripper?</label>
+	<nail x="190" y="100"/>
+	<nail x="10" y="100"/>
+</transition>
+	<transition><source ref="id1"/><target ref="id0"/>
+	<label kind="guard" x="100" y="150">remaining_object_amount == 1</label>
+	<label kind="assignment" x="100" y="170">object.picked_and_placed := true,
+remaining_object_amount := 0</label>
+	<label kind="synchronisation" x="100" y="210">press_Ten?</label>
+	<nail x="190" y="150"/>
+	<nail x="10" y="150"/>
+</transition>
+	<transition><source ref="id0"/><target ref="id1"/>
+	<label kind="synchronisation" x="100" y="-70">press_start?</label>
+	<nail x="10" y="-50"/>
+	<nail x="190" y="-50"/>
+</transition>
+</template>
+<template>
+	<name>user</name>
+	<location id="id0" x="0" y="0"> 
+        <name x="20" y="0">default</name>
+	</location>
+	<location id="id1" x="200" y="0"> 
+        <name x="220" y="0">select_mode</name>
+		<committed/>
+	</location>
+	<init ref="id0"/>
+	<transition><source ref="id1"/><target ref="id0"/>
+	<label kind="synchronisation" x="100" y="50">press_Five!</label>
+	<nail x="190" y="50"/>
+	<nail x="10" y="50"/>
+</transition>
+	<transition><source ref="id1"/><target ref="id0"/>
+	<label kind="synchronisation" x="100" y="100">press_Open_Gripper!</label>
+	<nail x="190" y="100"/>
+	<nail x="10" y="100"/>
+</transition>
+	<transition><source ref="id1"/><target ref="id0"/>
+	<label kind="synchronisation" x="100" y="150">press_Ten!</label>
+	<nail x="190" y="150"/>
+	<nail x="10" y="150"/>
+</transition>
+	<transition><source ref="id0"/><target ref="id1"/>
+	<label kind="synchronisation" x="100" y="-70">press_start!</label>
+	<nail x="10" y="-50"/>
+	<nail x="190" y="-50"/>
+</transition>
+</template>
+<system>
+system robot,user;
+</system>
+
+    <queries>
+    
+        <query>
+            <formula>( robot.default  and user.select_mode) --> ( robot.select_mode )</formula>
+			<comment>Robot_turns_on</comment>
+        </query>
+        
+        <query>
+            <formula>( object.fixed  and  gripper.open  and  robot.default  and user.default) --> ( object.picked_and_placed  and  robot.default )</formula>
+			<comment>Robot_placing_the_object_within_a_time_frame_of_5_seconds</comment>
+        </query>
+        
+        <query>
+            <formula>( object.fixed  and  gripper.closed  and  robot.default  and user.default) --> ( object.picked_and_placed  and  robot.default )</formula>
+			<comment>Robot_simultaneously_performing_multiple_actions</comment>
+        </query>
+        
+        <query>
+            <formula>( object.fixed  and  gripper.open  and  robot.default  and  None.remaining_object_amount == 1  and user.default) --> ( object.picked_and_placed  and  None.remaining_object_amount == 0  and  robot.default )</formula>
+			<comment>Verifying_the_quantity_of_objects_left_to_grasp</comment>
+        </query>
+        
+        <query>
+            <formula>( object.fixed  and  gripper.open  and  robot.default  and  None.remaining_object_amount &gt; 0  and user.select_mode) --> ( object.picked_and_placed  and  robot.default )</formula>
+			<comment>Verifying_the_presence_of_objects_still_available_for_grasping</comment>
+        </query>
+        
+    </queries>
+    </nta>

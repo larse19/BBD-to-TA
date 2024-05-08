@@ -49,15 +49,19 @@ class Transition:
         self.invariant_location: "Location" = None
 
     def add_label(self, label: "Label"):
-        if(label in self.labels):
-            return
+        for l in self.labels:
+            if l == label:
+                return
+            if l.kind == label.kind:
+                l.text += f",\n{label.text}"
+                return
         self.labels.append(label)
 
     def __str__(self):
         return f"\nSource: {self.source}\nTarget: {self.target}\nAction: {self.action}\nLabels: {self.labels}\n"
     
     def __repr__(self):
-        return f"({self.source.name} -> {self.target.name} : {self.action})"
+        return f"({self.source.name} -> {self.target} : {self.action})"
     
     def __eq__(self, __value: object) -> bool:
         if(self.target is None):
@@ -65,10 +69,14 @@ class Transition:
         return self.source == __value.source and self.target == __value.target and self.action == __value.action
 
 class Label:
-    def __init__(self, kind: str, text: str):
+    def __init__(self, kind: str, text: list[str]):
         self.kind = kind
         self.text = text
         self.position = Position(0, 0)
+
+    def add_text(self, text: str):
+        if(text not in self.text):
+            self.text.append(text)
 
     def __str__(self):
         return f"Kind: {self.kind}\nText: {self.text}"
@@ -77,7 +85,7 @@ class Label:
         return f"{self.text}"
 
     def __eq__(self, __value: object) -> bool:
-        return self.text == __value.text and self.kind == __value.kind
+        return self.kind == __value.kind
 
 class Location:
 

@@ -49,6 +49,18 @@ def get_location(name: str, all_locations: list[Location]):
             return location
     return None
 
+def add_variable(variables: list[str], variable: str):
+    if variable not in variables:
+        variables.append(variable)
+
+def add_label(labels: list[Label], newLabel: Label):
+    for l in labels:
+        if l == newLabel:
+            for text in newLabel.text:
+                l.add_text(text)
+    labels.append(newLabel)
+            
+
 
 def commit_action(current: Location, action: Tree, channels: list[str]) -> Transition | None:
     action_name = find_child(action, "ACTION_NAME").value

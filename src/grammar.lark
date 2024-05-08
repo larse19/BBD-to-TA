@@ -25,10 +25,9 @@ then_clause: entity_property STATE_GUARD (("in"? STATE_NAME) | (GUARD PROPERTY_V
 STATE_GUARD: "is" | "is not" | "are" | "are not"
 GUARD: "equal to" | "greater than" | "less than"
 
-
 !concurrent_action: ACTION_MODE "concurrently" ACTION_NAME (ACTION_VALUE)? entity_property (within_time)?
 action: ACTION_MODE ACTION_NAME (ACTION_VALUE)? entity_property (within_time)?
-ACTION_MODE: "I do" | "I do not" | "I"
+ACTION_MODE: "I do" | "I do not" | "I" | ("the" ENTITY_NAME ("\"" ENTITY_INSTANCE "\"")?)
 
 ?within_time: "within" TIME_VARIABLE_VALUE TIME_VARIABLE
 
@@ -37,7 +36,6 @@ _separated{x, sep}: x (sep x)*
 
 TIME_VARIABLE_VALUE: NUMBER
 TIME_VARIABLE: "seconds" | "minutes" | "hours" | "days" | "weeks" | "months" | "years"
-
 
 DOMAIN_MODEL_NAME: NAME /\n/
 ENTITY_NAME: NAME

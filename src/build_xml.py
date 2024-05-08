@@ -16,9 +16,9 @@ def nail_between_nails(nail: Nails, all: list[Nails]):
                 return True
 
 
-                
-
+            
 def build_ta(name: str, init_location: Location):
+    print(init_location)
     template_text = "<template>\n"
     template_text += "\t<name>" + name + "</name>\n"
     locations_text = ""
@@ -63,7 +63,7 @@ def build_ta(name: str, init_location: Location):
         
     def calculate_label_position(transition: Transition, nails: Nails):
         nonlocal label_positions
-        increment =  15 if target_is_left_of_source(transition.source, transition.target) else - 15
+        increment =  20 if target_is_left_of_source(transition.source, transition.target) else - 20
         base = 0 if target_is_left_of_source(transition.source, transition.target) else 20
 
         source_x = nails.nail1.x
@@ -79,7 +79,7 @@ def build_ta(name: str, init_location: Location):
 
     def print_transition_to_file(transition: Transition):
         nonlocal transitions_text
-        if(transition.source == transition.target):
+        if((transition.source == transition.target) |  (not transition.target)):
             return
         source = transition.source
         # if(transition.invariant_location):
@@ -93,13 +93,20 @@ def build_ta(name: str, init_location: Location):
 
         for label in transition.labels:
             position = calculate_label_position(transition, nails)
-            transitions_text += f'\t<label kind="{label.kind}" x="{position.x}" y="{position.y}">{label.text}</label>\n'
+            # If more than one line of text, mark the extra lines as taken positions
+            for i in range(1, len(label.text)):
+                calculate_label_position(transition, nails)
+
+            label_value = ',\n'.join(label.text)
+            transitions_text += f'\t<label kind="{label.kind}" x="{position.x}" y="{position.y}">{label_value}</label>\n'
         if(nails.nail1.y != 0):
             transitions_text += f'\t<nail x="{nails.nail1.x}" y="{nails.nail1.y}"/>\n'
             transitions_text += f'\t<nail x="{nails.nail2.x}" y="{nails.nail2.y}"/>\n'
         transitions_text += "</transition>\n"
     
     def print_location_to_file(location: Location):
+        if(not location):
+            return
         nonlocal locations_text, init_text
         if(location in explored_locations):
             return

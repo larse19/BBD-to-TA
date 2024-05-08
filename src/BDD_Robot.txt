@@ -1,0 +1,61 @@
+ model sample
+
+entity robot {
+    actions: press
+    states: default, select_mode
+    properties: position, remaining_object_amount, button
+}
+
+entity object {
+ states: fixed , picked_and_placed
+ }
+
+ entity gripper {
+ states: open , closed
+ }
+
+Scenario: Robot_turns_on
+Given the robot is in default
+When I press the button "start"
+Then the robot is in select_mode
+
+Scenario:  Robot_placing_the_object_within_a_time_frame_of_5_seconds
+Given the object "Object" is fixed
+And the gripper "Gripper_A" is open
+And the position of the robot "Robot_A" is default
+When I press the button "start"
+And I press the button "Five"
+Then the object "_Object_" is picked_and_placed 
+And the robot is default
+
+Scenario: Robot_simultaneously_performing_multiple_actions
+Given the object  "Object" is fixed
+And the gripper "Gripper_B" is closed
+And the position of the robot "Robot_B" is default 
+When I press the button "start"
+And I concurrently press the button "Open_Gripper"
+Then the object "Object" is picked_and_placed
+And the robot is default
+
+
+Scenario: Verifying_the_quantity_of_objects_left_to_grasp
+Given the object "Object" is fixed
+And the gripper "Gripper_C" is open
+And the position of the robot "Robot_C" is default 
+And the remaining_object_amount is equal to 1
+When I press the button "start"
+And I press the button "Ten"
+Then the object "Object" is picked_and_placed 
+And the remaining_object_amount is equal to 0
+And the robot is default
+
+
+Scenario: Verifying_the_presence_of_objects_still_available_for_grasping
+Given the object "Object" is fixed
+And the gripper " Gripper_D" is open
+And the position of the robot "Robot_D" is default 
+And the remaining_object_amount is greater than 0
+When I press the button "start"
+Then the object "Object" is picked_and_placed
+And the robot is default
+

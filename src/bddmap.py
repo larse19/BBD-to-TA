@@ -23,7 +23,7 @@ def convert(infile: str, outfile: str):
     (user_name, user_locations) = create_user(ast)
     user_text = build_ta(user_name, user_locations[0])
 
-    query_text = build_ctl(create_ctl(user_locations))
+    query_text = build_ctl(create_ctl(ast, user_locations))
 
     full_text_file = build([ta_name, "user"], ta_text + user_text, query_text, channels, globalDeclarations)
 
