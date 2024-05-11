@@ -5,7 +5,6 @@
 clock x;
 struct {
 	bool returned;
-	int type;
 } product;
 
 struct {
@@ -13,7 +12,10 @@ struct {
 	int value;
 } inserted_amount;
 
-bool Coke;
+struct {
+	bool returned;
+} Coke;
+
 bool ice;
 chan insert_2;
 chan select_Coke;
@@ -40,13 +42,13 @@ chan no_pick_Coke;</declaration>
 	<init ref="id0"/>
 	<transition><source ref="id3"/><target ref="id0"/>
 	<label kind="synchronisation" x="300" y="150">pick_Coke?</label>
-	<label kind="assignment" x="300" y="170">product.returned := true</label>
+	<label kind="assignment" x="300" y="170">Coke.returned := true</label>
 	<nail x="590" y="150"/>
 	<nail x="10" y="150"/>
 </transition>
 	<transition><source ref="id3"/><target ref="id0"/>
 	<label kind="synchronisation" x="300" y="200">no_pick_Coke?</label>
-	<label kind="assignment" x="300" y="220">product.returned := true</label>
+	<label kind="assignment" x="300" y="220">Coke.returned := true</label>
 	<nail x="590" y="200"/>
 	<nail x="10" y="200"/>
 </transition>
@@ -58,13 +60,13 @@ chan no_pick_Coke;</declaration>
 </transition>
 	<transition><source ref="id2"/><target ref="id0"/>
 	<label kind="synchronisation" x="200" y="100">pick_Coke?</label>
-	<label kind="assignment" x="200" y="120">product.returned := true</label>
+	<label kind="assignment" x="200" y="120">Coke.returned := true</label>
 	<nail x="390" y="100"/>
 	<nail x="10" y="100"/>
 </transition>
 	<transition><source ref="id2"/><target ref="id0"/>
 	<label kind="synchronisation" x="200" y="250">no_pick_Coke?</label>
-	<label kind="assignment" x="200" y="270">product.returned := true</label>
+	<label kind="assignment" x="200" y="270">Coke.returned := true</label>
 	<nail x="390" y="250"/>
 	<nail x="10" y="250"/>
 </transition>
@@ -207,7 +209,7 @@ system vending_machine,user;
     <queries>
     
         <query>
-            <formula>( vending_machine.idle  and  product.returned ) --> ( inserted_amount.value == 2  and  vending_machine.selection_mode )</formula>
+            <formula>( vending_machine.idle  and user.selection_mode) --> ( inserted_amount.value == 2  and  vending_machine.selection_mode )</formula>
 			<comment>Waiting_for_drink_selection</comment>
         </query>
         
@@ -217,7 +219,7 @@ system vending_machine,user;
         </query>
         
         <query>
-            <formula>( vending_machine.idle  and user.inv_select_Coke) --> (Coke == true and  vending_machine.dispensing_mode )</formula>
+            <formula>( vending_machine.idle  and user.inv_select_Coke) --> ( vending_machine.dispensing_mode )</formula>
 			<comment>Successful_dispensing_with_no_extras</comment>
         </query>
         
@@ -237,22 +239,22 @@ system vending_machine,user;
         </query>
         
         <query>
-            <formula>( vending_machine.dispensing_mode  and user.inv_pick_Coke) --> ( product.returned  and  vending_machine.idle )</formula>
+            <formula>( vending_machine.dispensing_mode  and user.inv_pick_Coke) --> ( Coke.returned  and  vending_machine.idle )</formula>
 			<comment>Drink_picked_successfully</comment>
         </query>
         
         <query>
-            <formula>( vending_machine.dispensing_mode  and user.inv_no_pick_Coke) --> ( product.returned  and  vending_machine.idle )</formula>
+            <formula>( vending_machine.dispensing_mode  and user.inv_no_pick_Coke) --> ( Coke.returned  and  vending_machine.idle )</formula>
 			<comment>Machine_should_return_unpicked_products</comment>
         </query>
         
         <query>
-            <formula>( vending_machine.extra_dispensing_mode  and user.inv_pick_Coke) --> ( product.returned  and  vending_machine.idle )</formula>
+            <formula>( vending_machine.extra_dispensing_mode  and user.inv_pick_Coke) --> ( Coke.returned  and  vending_machine.idle )</formula>
 			<comment>Drink_picked_successfully_x</comment>
         </query>
         
         <query>
-            <formula>( vending_machine.extra_dispensing_mode  and user.inv_no_pick_Coke) --> ( product.returned  and  vending_machine.idle )</formula>
+            <formula>( vending_machine.extra_dispensing_mode  and user.inv_no_pick_Coke) --> ( Coke.returned  and  vending_machine.idle )</formula>
 			<comment>Machine_should_return_unpicked_products_x</comment>
         </query>
         

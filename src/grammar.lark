@@ -6,7 +6,8 @@ entity: "entity" ENTITY_NAME "{" (actions)?  (states)?  (properties)? "}"
 
 ?actions: "actions:" _separated{ACTION_NAME, ","}  
 ?states: "states:"  _separated{STATE_NAME, ","}  
-?properties: "properties:"  _separated{PROPERTY_NAME, ","}  
+// ?properties: "properties:"  _separated{PROPERTY_NAME, ","}  
+?properties: "properties:"  (PROPERTY_NAME INITIAL_PROPERTY_VALUE?) ("," PROPERTY_NAME INITIAL_PROPERTY_VALUE?)*
 
 ?scenario: "Scenario:" SCENARIO_NAME given when concurrent? then
 
@@ -42,6 +43,7 @@ ENTITY_NAME: NAME
 ACTION_NAME: NAME
 STATE_NAME: NAME
 PROPERTY_NAME: NAME
+INITIAL_PROPERTY_VALUE: "=" NUMBER
 PROPERTY_INSTANCE: NAME
 SCENARIO_NAME: NAME
 ACTION_VALUE: NAME | NUMBER

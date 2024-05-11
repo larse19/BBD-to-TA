@@ -76,51 +76,27 @@ def create_user(ast: ParseTree) -> tuple[str, list[Location]]:
         create_location(state,  False, location_index * location_x_offset, 0, all_locations)
     
     for scenario in scenarios:
-        print("\n", scenario.children[0].value)
+        # print("\n", scenario.children[0].value)
         current_location = None
         labels = []
         given_labels = []
         is_first_action = True
-        # for given in scenario.find_data("given_clause"):
-        #     given_entity = ""
-        #     property_name = ""
-        #     guard = ""
-        #     for child in given.children:
-        #         if(isinstance(child, Token)):
-        #             if(child.type == "GUARD"):
-        #                 guard = guard_to_operator(child.value)
-        #         if(isinstance(child, Tree)):
-        #             entity_name = find_child(child, "ENTITY_NAME")
-        #             if(entity_name):
-        #                 given_entity = entity_name.value
-        #             _property_name = find_child(child, "PROPERTY_NAME")
-        #             if(_property_name):
-        #                 property_name = _property_name.value
-        #         elif(given_entity):
-        #             if(child.type == "PROPERTY_VALUE"):
-        #                 add_label(labels,Label("guard", [f'{(given_entity + ".") if given_entity != main_entity.name else ""}{property_name} {guard} {child.value}']))
 
-        #     entity = given.children[0]
-        #     source = find_child(given, "STATE_NAME")
-        #     if(not source):
-        #         continue
-        #     if(given_entity == main_entity.name):
-        #         current_location = get_location(source.value, all_locations)
         for given in scenario.find_data("given_clause"):
-            print("GIVEN", given)
+            # print("GIVEN", given)
             # print(given)
             given_entity = ""
             property_name = ""
             guard = ""
             for child in given.children:
-                if(isinstance(child, Token)):
-                    if(child.type == "GUARD"):
-                        guard = guard_to_operator(child.value)
-                    elif(child.type == "PROPERTY_VALUE"):
-                        if(given_entity):
-                            add_label(given_labels, Label("guard", [f'{(given_entity + ".") if given_entity != main_entity.name else ""}{property_name} {guard} {child.value}']))
-                        else:
-                            add_label(given_labels, Label("guard", [f'{property_name} {guard} {child.value}']))
+                # if(isinstance(child, Token)):
+                #     if(child.type == "GUARD"):
+                #         guard = guard_to_operator(child.value)
+                #     elif(child.type == "PROPERTY_VALUE"):
+                #         if(given_entity):
+                #             add_label(given_labels, Label("guard", [f'{(given_entity + ".") if given_entity != main_entity.name else ""}{property_name} {guard} {child.value}']))
+                #         else:
+                #             add_label(given_labels, Label("guard", [f'{property_name} {guard} {child.value}']))
                 if(isinstance(child, Tree)):
                     entity_name = find_child(child, "ENTITY_NAME")
                     if(entity_name):
@@ -163,21 +139,21 @@ def create_user(ast: ParseTree) -> tuple[str, list[Location]]:
 
 
                     constraint = get_action_constraint(action)
-                    if(current_location != target):
-                        if(constraint):
-                            invariant_location = create_location("inv_" + action_name, False, 0 ,0 ,all_locations, constraint_to_string(constraint))
-                            for label in labels:
-                                transition = create_transition(current_location, invariant_location, action_name, label)
-                                if(target == initial_location):
-                                    transition = create_transition(invariant_location, target, action_name, Label("assignment", ["x := 0"]))
-                                else:
-                                    transition = create_transition(invariant_location, target, action_name, None)
-                                transition.invariant_location = invariant_location
-                        else:
-                            for label in labels:
-                                transition = create_transition(current_location, target, action_name, label)
+                    # if(current_location != target):
+                    if(constraint):
+                        invariant_location = create_location("inv_" + action_name, False, 0 ,0 ,all_locations, constraint_to_string(constraint))
+                        for label in labels:
+                            transition = create_transition(current_location, invariant_location, action_name, label)
+                            if(target == initial_location):
+                                transition = create_transition(invariant_location, target, action_name, Label("assignment", ["x := 0"]))
+                            else:
+                                transition = create_transition(invariant_location, target, action_name, None)
+                            transition.invariant_location = invariant_location
+                    else:
+                        for label in labels:
+                            transition = create_transition(current_location, target, action_name, label)
 
-                        current_location = target
+                    current_location = target
                 else:
                     current_location = next_location
 

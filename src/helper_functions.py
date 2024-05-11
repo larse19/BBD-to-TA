@@ -50,7 +50,7 @@ def get_location(name: str, all_locations: list[Location]):
     return None
 
 def add_variable(variables: list[str], variable: str):
-    if variable not in variables:
+    if variable not in [x.split("=")[0] for x in variables]:
         variables.append(variable)
 
 def add_label(labels: list[Label], newLabel: Label):

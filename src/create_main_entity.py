@@ -1,4 +1,5 @@
 import os
+from copy import copy
 from itertools import chain
 
 from lark import ParseTree, Token, Tree
@@ -43,10 +44,18 @@ def create_main_ta(ast: ParseTree) -> tuple[str, list[Location], list[str], list
             actions.append(single_action.value)
 
         for property in entity.find_data("properties"):
-            properties = list(map(lambda p: p.value, property.children ))
-        single_property = find_child(entity, "PROPERTY_NAME")
-        if(single_property and single_property not in properties):
-            properties.append(single_property.value)
+            current = (None, None)
+            for property in property.children :
+                if(property.type == "PROPERTY_NAME"):
+                    if(current[0]):
+                        properties.append(current)
+                    current = (property.value, None)
+                if(property.type == "INITIAL_PROPERTY_VALUE"):
+                    current = (current[0], property.value)
+                
+        # single_property = find_child(entity, "PROPERTY_NAME")
+        # if(single_property and single_property not in properties):
+        #     properties.append(single_property.value)
 
         entities.append(Entity(entity_name, states, actions, properties))
 
@@ -68,7 +77,7 @@ def create_main_ta(ast: ParseTree) -> tuple[str, list[Location], list[str], list
     ta_name = next(ast.find_data("entity")).children[0].lstrip(" ").rstrip("\n")
 
     scenarios = ast.find_data("scenario")
-    next(ast.find_data("scenario"))
+    #next(ast.find_data("scenario"))
 
 
     def create_entity_type(entity: Entity):
@@ -77,7 +86,7 @@ def create_main_ta(ast: ParseTree) -> tuple[str, list[Location], list[str], list
         for state in entity.states:
             variable_string += f'\t{"bool"} {state};\n'
         for property in entity.properties:
-            variable_string += f'\t{"int"} {property};\n'
+            variable_string += f'\t{"int"} {property[0]}{property[1] if property[1] else ""};\n'
         variable_string += f'{"}"} {entity.name};\n'
         globalDeclarations.append(variable_string)
 
@@ -88,6 +97,9 @@ def create_main_ta(ast: ParseTree) -> tuple[str, list[Location], list[str], list
     # Create locations for all states in the main entity
     for state in entities[0].states:
         create_location(state,  False, 0, 0, all_locations)
+
+    for property in main_entity.properties:
+        add_variable(variable_names, f"int {property[0]}{property[1] if property[1] else ''}")
 
     # # Create properties as variables
     # for child in ast.iter_subtrees():
@@ -102,6 +114,10 @@ def create_main_ta(ast: ParseTree) -> tuple[str, list[Location], list[str], list
     for scenario in scenarios:
         current_location = None
         labels = []
+        given_labels = []
+        is_first_action = True
+
+
         for given in scenario.find_data("given_clause"):
             # print("GIVEN", given)
             # print(given)
@@ -114,9 +130,9 @@ def create_main_ta(ast: ParseTree) -> tuple[str, list[Location], list[str], list
                         guard = guard_to_operator(child.value)
                     elif(child.type == "PROPERTY_VALUE"):
                         if(given_entity):
-                            add_label(labels, Label("guard", [f'{(given_entity + ".") if given_entity != main_entity.name else ""}{property_name} {guard} {child.value}']))
+                            add_label(given_labels, Label("guard", [f'{(given_entity + ".") if given_entity != main_entity.name else ""}{property_name} {guard} {child.value}']))
                         else:
-                            add_label(labels, Label("guard", [f'{property_name} {guard} {child.value}']))
+                            add_label(given_labels, Label("guard", [f'{property_name} {guard} {child.value}']))
                 if(isinstance(child, Tree)):
                     entity_name = find_child(child, "ENTITY_NAME")
                     if(entity_name):
@@ -124,6 +140,17 @@ def create_main_ta(ast: ParseTree) -> tuple[str, list[Location], list[str], list
                     _property_name = find_child(child, "PROPERTY_NAME")
                     if(_property_name):
                         property_name = _property_name.value
+                    _entity_instance = find_child(child, "ENTITY_INSTANCE")
+                    if(_entity_instance):
+                        given_entity = _entity_instance.value
+                        if(given_entity not in entities):
+                            for e in entities:
+                                if(e.name == entity_name.value):
+                                    new_entity = copy(e)
+                                    new_entity.name = _entity_instance.value
+                                    create_entity_type(new_entity)
+                                    entities.append(new_entity)
+                                    break
             
             # print("given:", given_entity, "property:", property_name,"guard:", guard)
 
@@ -140,8 +167,15 @@ def create_main_ta(ast: ParseTree) -> tuple[str, list[Location], list[str], list
                 
                 action_transition = commit_action(current_location, action, channels)
 
-                # Set target as next location from action transition
                 target = None
+                if(action_transition):
+                    if(is_first_action):
+                        is_first_action = False
+                        for label in given_labels:
+                            action_transition.add_label(label)
+                    target = action_transition.target
+
+                # Set target as next location from action transition
                 if(action_transition):
                     target = action_transition.target
 
@@ -161,6 +195,8 @@ def create_main_ta(ast: ParseTree) -> tuple[str, list[Location], list[str], list
                                         add_label(labels, Label("synchronisation", [action_name + "?"]))
                         if(target):
                             break
+                    if(action_transition):
+                        action_transition.target = target
                 else:
                     current_location = target
 
@@ -176,7 +212,18 @@ def create_main_ta(ast: ParseTree) -> tuple[str, list[Location], list[str], list
                             property_name = find_child(child, "PROPERTY_NAME")
                             if(property_name):
                                 then_property = property_name.value
-                                
+                            _entity_instance = find_child(child, "ENTITY_INSTANCE")
+                            if(_entity_instance):
+                                then_entity = _entity_instance.value
+                                if(then_entity not in entities):
+                                    for e in entities:
+                                        if(e.name == entity_name.value):
+                                            new_entity = copy(e)
+                                            new_entity.name = _entity_instance.value
+                                            create_entity_type(new_entity)
+                                            entities.append(new_entity)
+                                            break
+                                        
                         else:
                             if(then_entity == main_entity.name):
                                 if(child.type == "STATE_NAME"):
@@ -185,10 +232,10 @@ def create_main_ta(ast: ParseTree) -> tuple[str, list[Location], list[str], list
                                     try:
                                         int(child.value)
                                         add_label(labels, Label("assignment", [f'{then_property} := {child.value}']))
-                                        add_variable(variable_names, then_property)
+                                        add_variable(variable_names, "int " + then_property)
                                     except ValueError:
                                         add_label(labels, Label("assignment", [f'{child.value} := true']))
-                                        add_variable(variable_names, child.value)
+                                        add_variable(variable_names,"bool " + child.value)
                             else:
                                 if(child.type == "STATE_GUARD"):
                                     last_guard = get_state_guard_boolean(child)
@@ -201,19 +248,20 @@ def create_main_ta(ast: ParseTree) -> tuple[str, list[Location], list[str], list
                                             add_label(labels, Label("assignment", [f'{then_entity}.{then_property} := {child.value}']))
                                         else:
                                             add_label(labels, Label("assignment", [f'{then_property} := {child.value}']))
-                                            add_variable(variable_names, then_property)
+                                            add_variable(variable_names, "int " + then_property)
                                     except ValueError:
-                                        add_variable(variable_names, child.value)
+                                        add_variable(variable_names, "bool " + child.value)
                                         add_label(labels, Label("assignment", [f'{child.value} := true']))
-                if(action_transition):
-                    action_transition.target = target
+                
 
                 for label in labels:
+                    if(current_location == target):
+                        print("SAME", current_location.name, action_name)
                     create_transition(current_location, target, action_name, label)
                 current_location = target
                 
     for variable in variable_names:
-        globalDeclarations.append(f'bool {variable};')
+        globalDeclarations.append(f"{variable};")
 
     return (ta_name, all_locations, variable_names, channels, globalDeclarations)
 

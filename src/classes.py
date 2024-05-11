@@ -30,14 +30,25 @@ class Nails:
         return self.nail1 == __value.nail1 or self.nail2 == __value.nail2
 
 class Entity:
-    def __init__(self, name, states, actions, properties):
+    def __init__(self, name, states, actions, properties: tuple[str, int | None]):
         self.name = name
         self.states = states
         self.actions = actions
         self.properties = properties
 
+    def __repr__(self) -> str:
+        return f"{self}"
+
     def __str__(self):
-        return f"Name: {self.name}\nStates: {self.states}\nActions: {self.actions}\nProperties: {self.properties}"
+        return f"\nName: {self.name}\nStates: {self.states}\nActions: {self.actions}\nProperties: {self.properties}\n"
+    
+    def __copy__(self):
+        return Entity(self.name, self.states, self.actions, self.properties)
+    
+    def __eq__(self, value: object) -> bool:
+        if(isinstance(value, str)):
+            return self.name == value
+        return self.name == value.name
 
 
 class Transition:

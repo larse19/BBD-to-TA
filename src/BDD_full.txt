@@ -8,7 +8,6 @@ entity vending_machine {
 
 entity product {
   states: returned
-  properties: type
 }
 
 entity inserted_amount {
@@ -18,7 +17,6 @@ entity inserted_amount {
 
 Scenario: Waiting_for_drink_selection
 Given the vending_machine is idle
-And the type 
 When I insert 2
 Then the value of the inserted_amount is equal to 2 
 And the vending_machine is in selection_mode
@@ -34,8 +32,7 @@ Scenario: Successful_dispensing_with_no_extras
 Given the vending_machine is idle
 When I insert 2
 And I select the product "Coke" within 5 seconds
-Then the type of the product is equal to Coke 
-And the vending_machine is in dispensing_mode
+Then the vending_machine is in dispensing_mode
 
 Scenario: Dispensing_drink_with_extras
 Given the vending_machine is in selection_mode

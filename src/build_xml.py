@@ -18,7 +18,6 @@ def nail_between_nails(nail: Nails, all: list[Nails]):
 
             
 def build_ta(name: str, init_location: Location):
-    print(init_location)
     template_text = "<template>\n"
     template_text += "\t<name>" + name + "</name>\n"
     locations_text = ""
@@ -80,7 +79,13 @@ def build_ta(name: str, init_location: Location):
     def print_transition_to_file(transition: Transition):
         nonlocal transitions_text
         if((transition.source == transition.target) |  (not transition.target)):
-            return
+             has_sync = False
+             for label in transition.labels:
+                 if(label.kind == "synchronisation"):
+                        has_sync = True
+                        break
+             if(not has_sync):
+                 return
         source = transition.source
         # if(transition.invariant_location):
         #     print_location_to_file(transition.invariant_location)

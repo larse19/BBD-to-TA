@@ -17,7 +17,7 @@ def given_clause_to_ctl(clause: Tree):
     entity_instance = None
     property_instance = None
     for child in clause.children:
-        print(child)
+       #print(child)
         if isinstance(child, Tree) and child.data == "entity_property":
             for subchild in child.children:
                 if isinstance(subchild, Token) and subchild.type == "ENTITY_NAME":
@@ -43,7 +43,7 @@ def given_clause_to_ctl(clause: Tree):
     
     # if clause points to a entity instance: entity_instance (= | <= | >=) value
     if(entity_instance):
-        return f'{entity_instance} {guards_to_operator(state_guard,guard)} true'
+        entity_name = entity_instance
 
     # if clause points to a state: (not)? TA_name.state_name
     if(state_name):
@@ -75,49 +75,6 @@ def evaluate_action(action: Tree, current_location_name: str, user_locations: li
             return t.target.name
     return None
 
-    
-    # print(actions)
-    # statement = ""
-    # action_mode = None
-    # action_name = None
-    # action_value = None
-    # guard = None
-    # entity_name = None
-    # entity_instance = None
-    # property_name = None
-    # property_instance = None
-    # state_name = None
-    # time_variable = None
-    # time_value = None
-
-    # for child in action.children:
-    #     if isinstance(child, Tree) and child.data == "within_time":
-    #         for subchild in child.children:
-    #             if isinstance(subchild, Token) and subchild.type == "TIME_VARIABLE":
-    #                 time_variable = subchild.value
-    #             elif isinstance(subchild, Token) and subchild.type == "TIME_VARIABLE_VALUE":
-    #                 time_value = subchild.value
-    #     elif isinstance(child, Tree) and child.data == "entity_property":
-    #         for subchild in child.children:
-    #             if isinstance(subchild, Token) and subchild.type == "ENTITY_NAME":
-    #                 entity_name = subchild.value
-    #             elif isinstance(subchild, Token) and subchild.type == "PROPERTY_NAME":
-    #                   property_name = subchild.value
-    #     elif isinstance(child, Token) and child.type == "ACTION_MODE":
-    #         action_mode = child.value
-    #     elif isinstance(child, Token) and child.type == "ACTION_NAME":
-    #         action_name = child.value
-    #     elif isinstance(child, Token) and child.type == "GUARD":
-    #         guard = child.value
-    #     elif isinstance(child, Token) and child.type == "ACTION_VALUE":
-    #         action_value = child.value
-
-    # if(time_value):
-    #     statement = (f'x {"&lt;=" if action_mode_is_positive(action_mode) else "&gt;"} {time_value}')
-    
-
-
-    # return statement
 
 # returns list of (ctl, scenario_name)
 def create_ctl(ast:ParseTree, user_locations: list[Location]) -> list[(str, str)]:

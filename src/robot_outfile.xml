@@ -13,11 +13,53 @@ struct {
 	bool closed;
 } gripper;
 
-bool remaining_object_amount;
+struct {
+	bool fixed;
+	bool picked_and_placed;
+} Object_A;
+
+struct {
+	bool open;
+	bool closed;
+} Gripper_A;
+
+struct {
+	bool fixed;
+	bool picked_and_placed;
+} Object_B;
+
+struct {
+	bool open;
+	bool closed;
+} Gripper_B;
+
+struct {
+	bool fixed;
+	bool picked_and_placed;
+} Object_C;
+
+struct {
+	bool open;
+	bool closed;
+} Gripper_C;
+
+struct {
+	bool fixed;
+	bool picked_and_placed;
+} Object_D;
+
+struct {
+	bool open;
+	bool closed;
+} Gripper_D;
+
+int position;
+int remaining_object_amount=1;
 chan press_start;
 chan press_Five;
 chan press_Open_Gripper;
-chan press_Ten;</declaration>
+chan press_Ten;
+chan press_reset;</declaration>
 <template>
 	<name>robot</name>
 	<location id="id0" x="0" y="0"> 
@@ -29,29 +71,37 @@ chan press_Ten;</declaration>
 	</location>
 	<init ref="id0"/>
 	<transition><source ref="id1"/><target ref="id0"/>
-	<label kind="assignment" x="100" y="50">object.picked_and_placed := true</label>
+	<label kind="assignment" x="100" y="50">Object_A.picked_and_placed := true</label>
 	<label kind="synchronisation" x="100" y="70">press_Five?</label>
 	<nail x="190" y="50"/>
 	<nail x="10" y="50"/>
 </transition>
 	<transition><source ref="id1"/><target ref="id0"/>
-	<label kind="assignment" x="100" y="100">object.picked_and_placed := true</label>
+	<label kind="assignment" x="100" y="100">Object_B.picked_and_placed := true</label>
 	<label kind="synchronisation" x="100" y="120">press_Open_Gripper?</label>
 	<nail x="190" y="100"/>
 	<nail x="10" y="100"/>
 </transition>
 	<transition><source ref="id1"/><target ref="id0"/>
-	<label kind="guard" x="100" y="150">remaining_object_amount == 1</label>
-	<label kind="assignment" x="100" y="170">object.picked_and_placed := true,
+	<label kind="assignment" x="100" y="150">Object_C.picked_and_placed := true,
 remaining_object_amount := 0</label>
-	<label kind="synchronisation" x="100" y="210">press_Ten?</label>
+	<label kind="synchronisation" x="100" y="190">press_Ten?</label>
 	<nail x="190" y="150"/>
 	<nail x="10" y="150"/>
 </transition>
 	<transition><source ref="id0"/><target ref="id1"/>
 	<label kind="synchronisation" x="100" y="-70">press_start?</label>
+	<label kind="guard" x="100" y="-90">remaining_object_amount == 1</label>
 	<nail x="10" y="-50"/>
 	<nail x="190" y="-50"/>
+</transition>
+	<transition><source ref="id0"/><target ref="id0"/>
+	<label kind="synchronisation" x="0" y="-20">press_reset?</label>
+	<label kind="assignment" x="0" y="-40">remaining_object_amount := 1,
+Object_A.picked_and_placed := false,
+Object_B.picked_and_placed := false,
+Object_C.picked_and_placed := false,
+Object_D.picked_and_placed := false</label>
 </transition>
 </template>
 <template>
@@ -84,6 +134,9 @@ remaining_object_amount := 0</label>
 	<nail x="10" y="-50"/>
 	<nail x="190" y="-50"/>
 </transition>
+	<transition><source ref="id0"/><target ref="id0"/>
+	<label kind="synchronisation" x="0" y="-20">press_reset!</label>
+</transition>
 </template>
 <system>
 system robot,user;
@@ -97,23 +150,28 @@ system robot,user;
         </query>
         
         <query>
-            <formula>( object.fixed  and  gripper.open  and  robot.default  and user.default) --> ( object.picked_and_placed  and  robot.default )</formula>
+            <formula>( Object_A.fixed  and  Gripper_A.open  and  robot.default  and user.default) --> ( Object_A.picked_and_placed  and  robot.default )</formula>
 			<comment>Robot_placing_the_object_within_a_time_frame_of_5_seconds</comment>
         </query>
         
         <query>
-            <formula>( object.fixed  and  gripper.closed  and  robot.default  and user.default) --> ( object.picked_and_placed  and  robot.default )</formula>
+            <formula>( Object_B.fixed  and  Gripper_B.closed  and  robot.default  and user.default) --> ( Object_B.picked_and_placed  and  robot.default )</formula>
 			<comment>Robot_simultaneously_performing_multiple_actions</comment>
         </query>
         
         <query>
-            <formula>( object.fixed  and  gripper.open  and  robot.default  and  None.remaining_object_amount == 1  and user.default) --> ( object.picked_and_placed  and  None.remaining_object_amount == 0  and  robot.default )</formula>
+            <formula>( Object_C.fixed  and  Gripper_C.open  and  robot.default  and  None.remaining_object_amount == 1  and user.default) --> ( Object_C.picked_and_placed  and  None.remaining_object_amount == 0  and  robot.default )</formula>
 			<comment>Verifying_the_quantity_of_objects_left_to_grasp</comment>
         </query>
         
         <query>
-            <formula>( object.fixed  and  gripper.open  and  robot.default  and  None.remaining_object_amount &gt; 0  and user.select_mode) --> ( object.picked_and_placed  and  robot.default )</formula>
+            <formula>( Object_D.fixed  and  Gripper_D.open  and  robot.default  and  None.remaining_object_amount &gt; 0  and user.select_mode) --> ( Object_D.picked_and_placed  and  robot.default )</formula>
 			<comment>Verifying_the_presence_of_objects_still_available_for_grasping</comment>
+        </query>
+        
+        <query>
+            <formula>( robot.default  and  None.remaining_object_amount == 0  and user.default) --> ( None.remaining_object_amount == 1  and not Object_A.picked_and_placed  and not Object_B.picked_and_placed  and not Object_C.picked_and_placed  and not Object_D.picked_and_placed  and  robot.default )</formula>
+			<comment>reset_scene</comment>
         </query>
         
     </queries>
