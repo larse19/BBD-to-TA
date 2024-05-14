@@ -102,7 +102,8 @@ def build_ta(name: str, init_location: Location):
             for i in range(1, len(label.text)):
                 calculate_label_position(transition, nails)
 
-            label_value = ',\n'.join(label.text)
+            label_join_string = " and\n" if label.kind == "guard" else ",\n"
+            label_value = label_join_string.join(label.text)
             transitions_text += f'\t<label kind="{label.kind}" x="{position.x}" y="{position.y}">{label_value}</label>\n'
         if(nails.nail1.y != 0):
             transitions_text += f'\t<nail x="{nails.nail1.x}" y="{nails.nail1.y}"/>\n'

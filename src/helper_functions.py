@@ -18,6 +18,8 @@ def create_transition(source: Location, target: Location, action: str, label: La
     for t in source.transitions:
         if t == transition:
             if(label):
+                if(label. kind == "guard" and label in t.labels):
+                    break
                 t.add_label(label)
             return t
     if(label):
@@ -62,7 +64,7 @@ def add_label(labels: list[Label], newLabel: Label):
             
 
 
-def commit_action(current: Location, action: Tree, channels: list[str]) -> Transition | None:
+def commit_action(current: Location, action: Tree, channels: list[str], guard_labels: list[Label]) -> Transition | None:
     action_name = find_child(action, "ACTION_NAME").value
 
     if(not action_name):
@@ -78,6 +80,9 @@ def commit_action(current: Location, action: Tree, channels: list[str]) -> Trans
 
     for transition in current.transitions:
         if transition.action == channel_name:
+            if(any(l.kind == "guard" for l in transition.labels)):
+                if(set(guard_labels).issubset(set(transition.labels))):
+                    return transition
             return transition
         
     return None
@@ -91,6 +96,14 @@ def get_action_constraint(action: Tree):
         value = find_child(constraint, "TIME_VARIABLE_VALUE")
         time_variable = find_child(constraint, "TIME_VARIABLE")
         return (action_mode.value, time_variable.value if time_variable else "", value.value if value else "")
+    return None
+
+def get_then_constraint(then_clause: Tree):
+    constraint = find_first_data(then_clause, "within_time")
+    if(constraint):
+        value = find_child(constraint, "TIME_VARIABLE_VALUE")
+        time_variable = find_child(constraint, "TIME_VARIABLE")
+        return ("I",time_variable.value if time_variable else "", value.value if value else "")
     return None
 
 def constraint_to_string(constraint: tuple):

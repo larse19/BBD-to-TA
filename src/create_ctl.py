@@ -11,17 +11,16 @@ def given_clause_to_ctl(clause: Tree):
     state_name = None
     property_name = None
     property_value = None
-    entity_name = None
+    entity_name = ""
     guard = None
     state_guard = None
     entity_instance = None
     property_instance = None
     for child in clause.children:
-       #print(child)
         if isinstance(child, Tree) and child.data == "entity_property":
             for subchild in child.children:
                 if isinstance(subchild, Token) and subchild.type == "ENTITY_NAME":
-                    entity_name = subchild.value
+                    entity_name = subchild.value + "."
                 if isinstance(subchild, Token) and subchild.type == "PROPERTY_NAME":
                     property_name = subchild.value
                 if isinstance(subchild, Token) and subchild.type == "PROPERTY_INSTANCE":
@@ -43,17 +42,17 @@ def given_clause_to_ctl(clause: Tree):
     
     # if clause points to a entity instance: entity_instance (= | <= | >=) value
     if(entity_instance):
-        entity_name = entity_instance
+        entity_name = entity_instance + "."
 
     # if clause points to a state: (not)? TA_name.state_name
     if(state_name):
-        return f'{state_guard_to_ctl_operator(state_guard)} {entity_name}.{state_name} '
+        return f'{state_guard_to_ctl_operator(state_guard)} {entity_name}{state_name} '
 
     #if clause points to a property: [entity.](entity_instance | property_instance) (= | <= | >=) value
     if(property_value):
         try:
             int(property_value)
-            return f' {entity_name}.{property_name} {guards_to_operator(state_guard,guard)} {property_value} '
+            return f' {entity_name}{property_name} {guards_to_operator(state_guard,guard)} {property_value} '
         except ValueError:
             return  f'{property_value} {guards_to_operator(state_guard,guard)} true'
     
@@ -69,7 +68,8 @@ def evaluate_action(action: Tree, current_location_name: str, user_locations: li
     location = get_location(current_location_name, user_locations)
     if(not location):
         return None
-    t = commit_action(location, action, [])
+    #TODO: Implement guards
+    t = commit_action(location, action, [], [])
     if t:
         if(t.target):
             return t.target.name
@@ -98,9 +98,10 @@ def create_ctl(ast:ParseTree, user_locations: list[Location]) -> list[(str, str)
                 left_side.append(c)
 
         # Evaluate all actions
-        actions = chain(scenario.find_data("action"), scenario.find_data("concurrent_action"))
-        for action in actions:
-            current_location = evaluate_action(action, current_location, user_locations)
+        actions = list(chain(scenario.find_data("action"), scenario.find_data("concurrent_action")))
+
+        # for i in range(0, len(actions)):
+        current_location = evaluate_action(actions[0], current_location, user_locations)
         
         if(current_location):
             left_side.append(action_target_to_ctl(current_location))

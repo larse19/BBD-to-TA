@@ -21,7 +21,7 @@ when: "When" action  ("And" action )*
 ?concurrent: "And" concurrent_action ("And" concurrent_action)*
 
 then: "Then" then_clause  ("And"  then_clause)*
-then_clause: entity_property STATE_GUARD (("in"? STATE_NAME) | (GUARD PROPERTY_VALUE))
+then_clause: entity_property STATE_GUARD (("in"? STATE_NAME) | (GUARD PROPERTY_VALUE)) (within_time)?
 
 STATE_GUARD: "is" | "is not" | "are" | "are not"
 GUARD: "equal to" | "greater than" | "less than"

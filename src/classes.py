@@ -62,9 +62,13 @@ class Transition:
     def add_label(self, label: "Label"):
         for l in self.labels:
             if l == label:
-                return
-            if l.kind == label.kind:
-                l.text += f",\n{label.text}"
+                for text in label.text:
+                    l.add_text(text)
+                # if(label.kind == "guard"):
+                #     l.text += f" && {label.text[0]}"
+                # else:
+                #     l.text += f",\n{label.text}"
+                # print(l.text)
                 return
         self.labels.append(label)
 
@@ -73,6 +77,7 @@ class Transition:
     
     def __repr__(self):
         return f"({self.source.name} -> {self.target} : {self.action})"
+
     
     def __eq__(self, __value: object) -> bool:
         if(self.target is None):
@@ -97,6 +102,9 @@ class Label:
 
     def __eq__(self, __value: object) -> bool:
         return self.kind == __value.kind
+    
+    def __hash__(self) -> int:
+        return hash(f"{self.kind}{''.join(self.text)}")
 
 class Location:
 

@@ -117,7 +117,7 @@ def create_user(ast: ParseTree) -> tuple[str, list[Location]]:
         if(current_location):
             for action in chain(scenario.find_data("action"), scenario.find_data("concurrent_action")):
                 action_name = create_channel_name(action)
-                action_transition = commit_action(current_location, action, channels)
+                action_transition = commit_action(current_location, action, channels, given_labels)
                 next_location = None
                 if(action_transition):
                     if(is_first_action):
