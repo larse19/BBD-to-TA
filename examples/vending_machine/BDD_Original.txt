@@ -1,0 +1,64 @@
+model vending_system
+
+entity vending_machine {
+  actions: insert, select, pick, cancel
+  states: idle, selection_mode, dispensing_mode, extra_dispensing_mode
+  properties: option, inserted_amount, product
+}
+
+entity product {
+  states: returned
+}
+
+entity inserted_amount {
+  states: returned
+}
+
+Scenario: Waiting_for_drink_selection
+Given the vending_machine is idle
+When I insert 2
+Then the vending_machine is in selection_mode
+
+Scenario: Successful_dispensing_with_no_extras
+Given the vending_machine is idle
+When I insert 2
+And I select the product "Coke" within 5 seconds
+Then the vending_machine is in dispensing_mode
+
+Scenario: Dispensing_drink_with_extras
+Given the vending_machine is in selection_mode
+When I select the product "Coke" within 5 seconds
+And I concurrently select the option "ice" on the vending_machine
+Then the vending_machine is in extra_dispensing_mode
+
+Scenario: Canceling_operation
+Given the vending_machine is idle
+When I insert 2
+And I cancel within 5 seconds
+Then the inserted_amount is returned
+And the vending_machine is idle
+
+Scenario: Unsuccessful_dispensing
+Given the vending_machine is idle
+When I insert 2
+And I do not select within 5 seconds
+Then the inserted_amount is returned
+And the vending_machine is idle
+
+Scenario: Drink_picked_successfully
+Given the vending_machine is in dispensing_mode
+When I pick the product "Coke" within 10 seconds
+Then the vending_machine is idle
+
+Scenario: Machine_should_return_unpicked_products
+Given the vending_machine is in dispensing_mode
+When I do not pick the product "Coke" within 10 seconds
+Then the product "Coke" is returned
+And the vending_machine is idle
+
+Scenario: Not_enough_money
+Given the vending_machine is idle
+And the value of the inserted_amount is less than 2
+When I do not select within 5 seconds
+Then the inserted_amount is returned
+And the vending_machine is idle

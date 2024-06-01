@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+	<declaration>
+clock x;
+struct {
+	bool fixed;
+	bool picked_and_placed;
+} object = {true,false};
+
+struct {
+	bool open;
+	bool closed;
+} gripper = {true,false};
+
+struct {
+	bool open;
+	bool closed;
+} Gripper_A = {true,false};
+
+struct {
+	bool open;
+	bool closed;
+} Gripper_B = {true,false};
+
+struct {
+	bool open;
+	bool closed;
+} Gripper_C = {true,false};
+
+struct {
+	bool open;
+	bool closed;
+} Gripper_D = {true,false};
+
+int position;
+int remaining_object_amount=1;
+chan press_start;
+chan press_Five;
+chan press_Open_Gripper;
+chan press_Ten;
+chan press_reset;</declaration>
+	<template>
+		<name>robot</name>
+		<location id="id0" x="0" y="0">
+			<name x="20" y="0">default</name>
+		</location>
+		<location id="id1" x="200" y="0">
+			<name x="220" y="0">select_mode</name>
+			<committed/>
+		</location>
+		<location id="id2" x="400" y="0">
+			<name x="420" y="0">inv_press_Five</name>
+			<label kind="invariant" x="420" y="20">x &lt;= 5</label>
+		</location>
+		<location id="id3" x="600" y="0">
+			<name x="620" y="0">inv_press_Ten</name>
+			<label kind="invariant" x="620" y="20">x &lt;= 10</label>
+		</location>
+		<init ref="id0"/>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id0"/>
+			<label kind="assignment" x="200" y="100">x := 0,
+object.picked_and_placed := true</label>
+			<nail x="390" y="100"/>
+			<nail x="10" y="100"/>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="300" y="-70">press_Five?</label>
+			<nail x="210" y="-50"/>
+			<nail x="390" y="-50"/>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="100" y="70">press_Open_Gripper?</label>
+			<label kind="assignment" x="100" y="50">object.picked_and_placed := true</label>
+			<nail x="190" y="50"/>
+			<nail x="10" y="50"/>
+		</transition>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id0"/>
+			<label kind="assignment" x="300" y="150">x := 0,
+object.picked_and_placed := true,
+remaining_object_amount := 0</label>
+			<nail x="590" y="150"/>
+			<nail x="10" y="150"/>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id3"/>
+			<label kind="synchronisation" x="400" y="-120">press_Ten?</label>
+			<nail x="210" y="-100"/>
+			<nail x="590" y="-100"/>
+		</transition>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="guard" x="34" y="-93">object.fixed and
+Gripper_A.open</label>
+			<label kind="synchronisation" x="34" y="-110">press_start?</label>
+			<nail x="10" y="-50"/>
+			<nail x="190" y="-50"/>
+		</transition>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="guard" x="25" y="-170">object.fixed and
+Gripper_B.closed</label>
+			<label kind="synchronisation" x="25" y="-187">press_start?</label>
+			<nail x="15" y="-127"/>
+			<nail x="195" y="-127"/>
+		</transition>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="guard" x="17" y="-263">object.fixed and
+Gripper_C.open and
+remaining_object_amount == 1</label>
+			<label kind="synchronisation" x="17" y="-280">press_start?</label>
+			<nail x="15" y="-204"/>
+			<nail x="195" y="-204"/>
+		</transition>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="guard" x="17" y="-365">object.fixed and
+Gripper_D.open and
+remaining_object_amount &gt; 0</label>
+			<label kind="synchronisation" x="17" y="-382">press_start?</label>
+			<nail x="15" y="-306"/>
+			<nail x="195" y="-306"/>
+		</transition>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="-246" y="8">press_reset?</label>
+			<label kind="assignment" x="-246" y="-34">remaining_object_amount := 1,
+object.fixed := true</label>
+			<nail x="-42" y="17"/>
+			<nail x="-42" y="-25"/>
+		</transition>
+	</template>
+	<template>
+		<name>user</name>
+		<location id="id4" x="0" y="0">
+			<name x="20" y="0">default</name>
+		</location>
+		<location id="id5" x="200" y="0">
+			<name x="220" y="0">select_mode</name>
+			<committed/>
+		</location>
+		<init ref="id4"/>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id4"/>
+			<label kind="synchronisation" x="100" y="50">press_Five!</label>
+			<nail x="190" y="50"/>
+			<nail x="10" y="50"/>
+		</transition>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id4"/>
+			<label kind="synchronisation" x="100" y="100">press_Open_Gripper!</label>
+			<nail x="190" y="100"/>
+			<nail x="10" y="100"/>
+		</transition>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id4"/>
+			<label kind="synchronisation" x="100" y="150">press_Ten!</label>
+			<nail x="190" y="150"/>
+			<nail x="10" y="150"/>
+		</transition>
+		<transition>
+			<source ref="id4"/>
+			<target ref="id5"/>
+			<label kind="synchronisation" x="100" y="-70">press_start!</label>
+			<nail x="10" y="-50"/>
+			<nail x="190" y="-50"/>
+		</transition>
+		<transition>
+			<source ref="id4"/>
+			<target ref="id4"/>
+			<label kind="synchronisation" x="-127" y="-8">press_reset!</label>
+			<nail x="-34" y="34"/>
+			<nail x="-34" y="-25"/>
+		</transition>
+	</template>
+	<system>
+system robot,user;
+</system>
+	<queries>
+		<query>
+			<formula>( robot.default  and user.select_mode) --&gt; ( robot.select_mode )</formula>
+			<comment>Robot_turns_on</comment>
+		</query>
+		<query>
+			<formula>( object.fixed  and  Gripper_A.open  and  robot.default  and user.default) --&gt; ( object.picked_and_placed and robot.default )</formula>
+			<comment>Robot_placing_the_object_within_a_time_frame_of_5_seconds</comment>
+		</query>
+		<query>
+			<formula>( object.fixed  and  Gripper_B.closed  and  robot.default  and user.default) --&gt; ( object.picked_and_placed  and  robot.default )</formula>
+			<comment>Robot_simultaneously_performing_multiple_actions</comment>
+		</query>
+		<query>
+			<formula>( object.fixed  and  Gripper_C.open  and  robot.default  and  remaining_object_amount == 1  and user.default) --&gt; ( object.picked_and_placed  and  remaining_object_amount == 0  and  robot.default )</formula>
+			<comment>Verifying_the_quantity_of_objects_left_to_grasp</comment>
+		</query>
+		<query>
+			<formula>( object.fixed  and  Gripper_D.open  and  robot.default  and  remaining_object_amount &gt; 0  and user.select_mode) --&gt; ( object.picked_and_placed  and  robot.default )</formula>
+			<comment>Verifying_the_presence_of_objects_still_available_for_grasping</comment>
+		</query>
+		<query>
+			<formula>( robot.default  and  remaining_object_amount == 0  and user.default) --&gt; ( remaining_object_amount == 1  and  object.fixed  and  robot.default )</formula>
+			<comment>reset_scene</comment>
+		</query>
+	</queries>
+</nta>
