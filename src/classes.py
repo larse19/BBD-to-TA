@@ -68,7 +68,7 @@ class Transition:
                 #     l.text += f" && {label.text[0]}"
                 # else:
                 #     l.text += f",\n{label.text}"
-                # print(l.text)
+
                 return
         self.labels.append(label)
 

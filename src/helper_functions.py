@@ -49,7 +49,8 @@ def get_location(name: str, all_locations: list[Location]):
     for location in all_locations:
         if location.name == name:
             return location
-    return None
+    new_location = create_location(name, False, 0, 0, all_locations)
+    return new_location
 
 def add_variable(variables: list[str], variable: str):
     if variable not in [x.split("=")[0] for x in variables]:

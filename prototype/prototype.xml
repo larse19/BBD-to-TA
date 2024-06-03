@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
 <nta>
-	<declaration>
+<declaration>
 clock x;
 int option;
 int inserted_amount;
@@ -14,89 +14,50 @@ chan no_select;
 chan pick_Coke;
 chan no_pick_Coke;
 </declaration>
-	<template>
-		<name>vending_machine</name>
-		<location id="id0" x="0" y="0">
-			<name x="8" y="8">idle</name>
-		</location>
-		<location id="id1" x="0" y="119">
-			<name x="0" y="139">selection_mode</name>
-		</location>
-		<location id="id2" x="153" y="-102">
-			<name x="170" y="-93">dispensing_mode</name>
-		</location>
-		<location id="id3" x="153" y="119">
-			<name x="153" y="139">extra_dispensing_mode</name>
-		</location>
-		<location id="id4" x="0" y="-102">
-			<name x="17" y="-93">returned</name>
-		</location>
-		<init ref="id0"/>
-		<transition>
-			<source ref="id0"/>
-			<target ref="id1"/>
-			<label kind="synchronisation" x="17" y="59">insert_2?</label>
-		</transition>
-		<transition>
-			<source ref="id0"/>
-			<target ref="id2"/>
-			<label kind="synchronisation" x="110" y="0">select_Coke?</label>
-			<nail x="153" y="0"/>
-		</transition>
-		<transition>
-			<source ref="id1"/>
-			<target ref="id3"/>
-			<label kind="synchronisation" x="161" y="85">select_Coke?</label>
-		</transition>
-		<transition>
-			<source ref="id0"/>
-			<target ref="id4"/>
-			<label kind="synchronisation" x="280" y="34">cancel?</label>
-		</transition>
-		<transition>
-			<source ref="id0"/>
-			<target ref="id4"/>
-			<label kind="synchronisation" x="280" y="17">no_select?</label>
-		</transition>
-		<transition>
-			<source ref="id2"/>
-			<target ref="id0"/>
-			<label kind="synchronisation" x="59" y="-51">pick_Coke?</label>
-		</transition>
-		<transition>
-			<source ref="id2"/>
-			<target ref="id4"/>
-			<label kind="synchronisation" x="34" y="-127">no_pick_Coke?</label>
-		</transition>
-		<transition>
-			<source ref="id0"/>
-			<target ref="id4"/>
-			<label kind="synchronisation" x="-76" y="-51">no_select?</label>
-		</transition>
-	</template>
-	<template>
-		<name>user</name>
-		<location id="id5" x="0" y="0">
-			<name x="0" y="20">idle</name>
-		</location>
-		<location id="id6" x="200" y="0">
-			<name x="200" y="20">selection_mode</name>
-		</location>
-		<location id="id7" x="300" y="0">
-			<name x="300" y="20">dispensing_mode</name>
-		</location>
-		<location id="id8" x="400" y="0">
-			<name x="400" y="20">extra_dispensing_mode</name>
-		</location>
-		<init ref="id5"/>
-	</template>
-	<system>
+<template>
+	<name>vending_machine</name>
+	<location id="id0" x="0" y="0"> 
+            <name x="0" y="20">idle</name>
+        </location>
+	<location id="id2" x="100" y="0"> 
+            <name x="100" y="20">selection_mode</name>
+        </location>
+	<location id="id4" x="200" y="0"> 
+            <name x="200" y="20">dispensing_mode</name>
+        </location>
+	<location id="id6" x="300" y="0"> 
+            <name x="300" y="20">extra_dispensing_mode</name>
+        </location>
+	<location id="id8" x="400" y="0"> 
+            <name x="400" y="20">returned</name>
+        </location>
+	<init ref="id0"/>
+	<transition><source ref="id0"/><target ref="id2"/><label kind="synchronisation" x="0" y="0">insert_2?</label></transition>
+	<transition><source ref="id0"/><target ref="id4"/><label kind="synchronisation" x="0" y="0">select_Coke?</label></transition>
+	<transition><source ref="id2"/><target ref="id6"/><label kind="synchronisation" x="0" y="0">select_Coke?</label></transition>
+	<transition><source ref="id0"/><target ref="id8"/><label kind="synchronisation" x="0" y="0">cancel?</label></transition>
+	<transition><source ref="id0"/><target ref="id8"/><label kind="synchronisation" x="0" y="0">no_select?</label></transition>
+	<transition><source ref="id4"/><target ref="id0"/><label kind="synchronisation" x="0" y="0">pick_Coke?</label></transition>
+	<transition><source ref="id4"/><target ref="id8"/><label kind="synchronisation" x="0" y="0">no_pick_Coke?</label></transition>
+	<transition><source ref="id0"/><target ref="id8"/><label kind="synchronisation" x="0" y="0">no_select?</label></transition>
+</template>
+<template>
+	<name>user</name>
+	<location id="id1" x="0" y="0"> 
+            <name x="0" y="20">idle</name>
+        </location>
+	<location id="id3" x="200" y="0"> 
+            <name x="200" y="20">selection_mode</name>
+        </location>
+	<location id="id5" x="300" y="0"> 
+            <name x="300" y="20">dispensing_mode</name>
+        </location>
+	<location id="id7" x="400" y="0"> 
+            <name x="400" y="20">extra_dispensing_mode</name>
+        </location>
+	<init ref="id1"/>
+</template>
+<system>
 system vending_machine, user;
 </system>
-	<queries>
-		<query>
-			<formula></formula>
-			<comment></comment>
-		</query>
-	</queries>
 </nta>

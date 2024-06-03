@@ -1,0 +1,72 @@
+model sample
+
+entity robot {
+    actions: press
+    states: default_position, final_position, live
+}
+
+entity object {
+    states: fixed , picked_and_placed
+}
+
+ entity gripper {
+ states: open , closed
+ }
+
+ entity remaining_object_amount {
+ }
+
+ entity button {
+ }
+
+
+Scenario: Robot_is_live
+Given the robot is in default_position
+When I press the button "start"
+Then the robot is live
+
+Scenario: Robot_placing_the_object_within_a_time_frame_of_5_seconds
+Given the object "Object" is fixed
+And the gripper "Gripper_A" is open
+And the robot is in default_position
+When I press the button "start"
+And I press the button "Five"
+Then the object "Object" is picked_and_placed within 5 seconds
+And the robot is in final_position
+
+Scenario: Robot_simultaneously_performing_multiple_actions
+Given the object "Object" is fixed
+And the gripper "Gripper_B" is closed
+And the robot is in default_position
+When I press the button "start"
+And I concurrently press the button "Open_Gripper"
+Then the object "Object" is picked_and_placed
+And the robot is in final_position
+
+Scenario: Verifying_the_quantity_of_objects_left_to_grasp
+Given the object "Object" is fixed
+And the gripper "Gripper_C" is open
+And the robot is in default_position
+And the remaining_object_amount is equal to 1
+When I press the button "start"
+And I press the button "Ten"
+Then the object "Object" is picked_and_placed within 10 seconds
+And the remaining_object_amount is equal to 0
+And the robot is in final_position
+
+Scenario: Verifying_the_presence_of_objects_still_available_for_grasping
+Given the object "Object" is fixed
+And the gripper "Gripper_D" is open
+And the robot is in default_position
+And the remaining_object_amount is greater than 0
+When I press the button "start"
+Then the object "Object" is picked_and_placed
+And the robot is in final_position
+
+Scenario: Ending_a_task
+Given the robot is in final_position
+And the object "Object" is picked_and_placed
+And the gripper "Gripper_E" is open
+When I press the button "end"
+Then the gripper "Gripper_E" is open
+And the robot is in default_position

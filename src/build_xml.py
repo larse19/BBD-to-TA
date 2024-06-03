@@ -88,8 +88,6 @@ def build_ta(name: str, init_location: Location):
                  return
         source = transition.source
         # if(transition.invariant_location):
-        #     print_location_to_file(transition.invariant_location)
-        #     print_transition_to_file(Transition(source, transition.invariant_location, "", []))
         #     # transitions_text += f'\t<transition><source ref="{source.id}"/><target ref="{transition.invariant_location.id}"/></transition>\n'
         #     source = transition.invariant_location
 

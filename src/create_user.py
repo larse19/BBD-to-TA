@@ -76,15 +76,12 @@ def create_user(ast: ParseTree) -> tuple[str, list[Location]]:
         create_location(state,  False, location_index * location_x_offset, 0, all_locations)
     
     for scenario in scenarios:
-        # print("\n", scenario.children[0].value)
         current_location = None
         labels = []
         given_labels = []
         is_first_action = True
 
         for given in scenario.find_data("given_clause"):
-            # print("GIVEN", given)
-            # print(given)
             given_entity = ""
             property_name = ""
             guard = ""
@@ -105,7 +102,6 @@ def create_user(ast: ParseTree) -> tuple[str, list[Location]]:
                     if(_property_name):
                         property_name = _property_name.value
             
-            # print("given:", given_entity, "property:", property_name,"guard:", guard)
 
             entity = given.children[0]
             source = find_child(given, "STATE_NAME")
@@ -114,7 +110,7 @@ def create_user(ast: ParseTree) -> tuple[str, list[Location]]:
             if(given_entity == main_entity.name):
                 current_location = get_location(source.value, all_locations)
    
-        if(current_location):
+        if(current_location != None):
             for action in chain(scenario.find_data("action"), scenario.find_data("concurrent_action")):
                 action_name = create_channel_name(action)
                 action_transition = commit_action(current_location, action, channels, given_labels)

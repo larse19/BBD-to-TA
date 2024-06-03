@@ -281,7 +281,6 @@ for scenario in scenarios:
     for _action in scenario.find_data("action"):
         action = create_channel_name(_action)
     
-    # print(f"entity_name: {entity_name}, source: {source}, target: {target}, action: {action}\n")
 
     for template in templates:
         if template.name == entity_name:
@@ -323,7 +322,6 @@ globalDeclarationFinal = declarationStart + globalDeclarations + declarationEnd
 full_text_file += globalDeclarationFinal
 
 for template in templates:
-    # print(template)
     template_text = "<template>\n"
     template_text += "\t<name>" + template.name + "</name>\n"
     init_text = ""

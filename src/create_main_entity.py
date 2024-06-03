@@ -102,7 +102,6 @@ def create_main_ta(ast: ParseTree) -> tuple[str, list[Location], list[str], list
             else:
                 initializer_list.append("false")
         for property in entity.properties:
-            print(property)
             variable_string += f'\t{"int"} {property[0]};\n'
             initializer_list.append(f"{property[1].lstrip('=') if property[1] else '0'}")
         variable_string += f'{"}"} {entity.name} = {"{"}{",".join(initializer_list)}{"}"};\n'
@@ -163,7 +162,7 @@ def create_main_ta(ast: ParseTree) -> tuple[str, list[Location], list[str], list
                                     entities.append(new_entity)
                                     break
             
-            # print("given:", given_entity, "property:", property_name,"guard:", guard)
+
 
             entity = given.children[0]
             source = find_child(given, "STATE_NAME")
@@ -180,7 +179,6 @@ def create_main_ta(ast: ParseTree) -> tuple[str, list[Location], list[str], list
             if(current_location != None):
 
                 action_name = create_channel_name(action)
-                
                 action_transition = commit_action(current_location, action, channels, guard_labels)
 
                 target = None
@@ -220,6 +218,8 @@ def create_main_ta(ast: ParseTree) -> tuple[str, list[Location], list[str], list
                             break
                     if(action_transition):
                         action_transition.target = target
+                    if(not target):
+                        target = current_location
                 else:
                     current_location = target
                 constraint = None
@@ -298,7 +298,6 @@ def create_main_ta(ast: ParseTree) -> tuple[str, list[Location], list[str], list
                             else:
                                 if(target == initial_location):
                                     transition = create_transition(invariant_location, target, action_name, Label("assignment", ["x := 0"]))
-                                print("label",label)
                                 transition = create_transition(invariant_location, target, action_name, label)
                                 transition.invariant_location = invariant_location
                         continue
@@ -321,7 +320,9 @@ def create_main_ta(ast: ParseTree) -> tuple[str, list[Location], list[str], list
 
                 # for label in labels:
                 #     create_transition(current_location, target, action_name, label)
+                
                 current_location = target
+
                 
     for variable in variable_names:
         globalDeclarations.append(f"{variable};")
